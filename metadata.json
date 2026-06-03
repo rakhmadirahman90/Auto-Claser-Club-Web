@@ -1,0 +1,6 @@
+{
+  "name": "Auto Claser Club",
+  "description": "Website resmi komunitas Auto Claser Club (ACC)",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
