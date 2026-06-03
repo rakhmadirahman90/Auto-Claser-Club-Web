@@ -1,0 +1,53 @@
+{
+  "entities": {
+    "Post": {
+      "title": "Post",
+      "description": "Blog post data",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "excerpt": { "type": "string" },
+        "date": { "type": "string" },
+        "imageUrl": { "type": "string" },
+        "category": { "type": "string" }
+      },
+      "required": ["title", "excerpt", "date", "imageUrl", "category"]
+    },
+    "Activity": {
+      "title": "Activity",
+      "description": "Community activity",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "location": { "type": "string" },
+        "date": { "type": "string" },
+        "imageUrl": { "type": "string" }
+      },
+      "required": ["title", "location", "date", "imageUrl"]
+    },
+    "Chapter": {
+      "title": "Chapter",
+      "description": "Regional Chapter",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "memberCount": { "type": "number" }
+      },
+      "required": ["name", "memberCount"]
+    }
+  },
+  "firestore": {
+    "posts/{postId}": {
+      "schema": { "$ref": "Post" },
+      "description": "Blog posts"
+    },
+    "activities/{activityId}": {
+      "schema": { "$ref": "Activity" },
+      "description": "Activities"
+    },
+    "chapters/{chapterId}": {
+      "schema": { "$ref": "Chapter" },
+      "description": "Chapters"
+    }
+  }
+}

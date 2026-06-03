@@ -4,22 +4,29 @@
  */
 
 import React from 'react';
-import Navbar from './components/Navbar';
-import Hero from './components/Hero';
-import About from './components/About';
-import Activities from './components/Activities';
-import News from './components/News';
-import Footer from './components/Footer';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import Home from './pages/Home';
+import Admin from './pages/Admin';
+import { DataProvider } from './context/DataContext';
+import { ThemeProvider } from './context/ThemeContext';
+import ThemeSelector from './components/ThemeSelector';
+import { Toaster } from 'react-hot-toast';
+import AnnouncementPopup from './components/AnnouncementPopup';
 
 export default function App() {
   return (
-    <div className="min-h-screen bg-black text-zinc-100 font-sans selection:bg-blue-500/30">
-      <Navbar />
-      <Hero />
-      <About />
-      <Activities />
-      <News />
-      <Footer />
-    </div>
+    <ThemeProvider>
+      <DataProvider>
+        <BrowserRouter>
+          <AnnouncementPopup />
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/admin" element={<Admin />} />
+          </Routes>
+          <ThemeSelector />
+          <Toaster position="bottom-right" />
+        </BrowserRouter>
+      </DataProvider>
+    </ThemeProvider>
   );
 }

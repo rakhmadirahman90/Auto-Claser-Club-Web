@@ -1,48 +1,57 @@
 import React from 'react';
-import { ACTIVITIES } from '../data';
 import { Calendar, MapPin } from 'lucide-react';
 import { motion } from 'motion/react';
+import { useData } from '../context/DataContext';
 
 export default function Activities() {
+  const { activities } = useData();
+
   return (
-    <section id="activities" className="py-24 bg-black">
+    <section id="activities" className="py-24 bg-theme-bg">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
-          <span className="text-blue-500 font-bold tracking-widest uppercase text-sm mb-2 block">Agenda</span>
-          <h2 className="text-3xl md:text-5xl font-bold text-white mb-6">
-            Kegiatan <span className="text-red-500">Mendatang</span>
+          <span className="text-theme-primary font-bold tracking-widest uppercase text-sm mb-2 block">Agenda</span>
+          <h2 className="text-3xl md:text-5xl font-bold text-theme-text mb-6">
+            Kegiatan <span className="text-theme-secondary">Mendatang</span>
           </h2>
-          <div className="h-1 w-20 bg-red-600 rounded-full mx-auto" />
+          <div className="h-1 w-20 bg-theme-secondary rounded-full mx-auto" />
         </div>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {ACTIVITIES.map((activity, index) => (
+          {activities.map((activity, index) => (
             <motion.div
               key={activity.id}
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: index * 0.1 }}
-              className="bg-zinc-900/50 rounded-2xl overflow-hidden border border-zinc-800 hover:border-blue-500 transition-colors group cursor-pointer"
+              className="bg-theme-surface/50 rounded-2xl overflow-hidden border border-theme-border hover:border-theme-primary transition-colors group cursor-pointer"
             >
               <div className="relative h-48 overflow-hidden">
-                <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors z-10" />
+                <div className="absolute inset-0 bg-theme-bg/20 group-hover:bg-transparent transition-colors z-10" />
                 <img 
-                  src={activity.imageUrl} 
+                  src={activity.imageUrl || 'https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?auto=format&fit=crop&q=80&w=1000'}
+                  onError={(e) => {
+                    const target = e.currentTarget as HTMLImageElement;
+                    const fallback = 'https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?auto=format&fit=crop&q=80&w=1000';
+                    if (target.src !== fallback) {
+                      target.src = fallback;
+                    }
+                  }}
                   alt={activity.title} 
                   className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500"
                 />
-                <div className="absolute top-4 right-4 bg-red-600 z-20 px-3 py-1 rounded-full flex items-center gap-2">
-                  <Calendar size={14} className="text-white" />
-                  <span className="text-white text-sm font-bold">{activity.date}</span>
+                <div className="absolute top-4 right-4 bg-theme-secondary z-20 px-3 py-1 rounded-full flex items-center gap-2">
+                  <Calendar size={14} className="text-theme-text" />
+                  <span className="text-theme-text text-sm font-bold">{activity.date}</span>
                 </div>
               </div>
               
               <div className="p-6">
-                <h3 className="text-xl font-bold text-white mb-4 group-hover:text-blue-400 transition-colors">
+                <h3 className="text-xl font-bold text-theme-text mb-4 group-hover:text-blue-400 transition-colors">
                   {activity.title}
                 </h3>
-                <div className="flex items-center gap-2 text-zinc-400">
+                <div className="flex items-center gap-2 text-theme-muted">
                   <MapPin size={18} />
                   <span className="text-sm">{activity.location}</span>
                 </div>
