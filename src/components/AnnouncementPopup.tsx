@@ -23,30 +23,13 @@ export default function AnnouncementPopup() {
       return;
     }
 
-    const lastSeenDate = localStorage.getItem('announcement_last_seen_date');
-    const today = new Date().toISOString().split('T')[0];
-    
-    // Also track which announcement was seen, in case it changes the same day
-    const lastSeenId = localStorage.getItem('announcement_last_seen_id');
-    // We'll use a hash of title+content to detect changes, since ID is always 'announcement'
-    const currentHash = btoa(encodeURIComponent(`${displayData.title}|${displayData.content}`)).substring(0, 16);
-
-    if (lastSeenDate !== today || lastSeenId !== currentHash) {
-      // Small delay to make it feel less abrupt
-      const timer = setTimeout(() => setIsOpen(true), 1500);
-      return () => clearTimeout(timer);
-    }
-  }, [displayData.isActive, displayData.title, displayData.content]);
+    // Small delay to make it feel less abrupt
+    const timer = setTimeout(() => setIsOpen(true), 1500);
+    return () => clearTimeout(timer);
+  }, [displayData?.isActive, displayData?.title, displayData?.content]);
 
   const handleClose = () => {
     setIsOpen(false);
-    
-    if (displayData) {
-      const today = new Date().toISOString().split('T')[0];
-      const currentHash = btoa(encodeURIComponent(`${displayData.title}|${displayData.content}`)).substring(0, 16);
-      localStorage.setItem('announcement_last_seen_date', today);
-      localStorage.setItem('announcement_last_seen_id', currentHash);
-    }
   };
 
   return (

@@ -1,31 +1,37 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useData } from '../context/DataContext';
-import { Plus, Edit2, Trash2, ArrowLeft, LogOut, Database } from 'lucide-react';
+import { 
+  Plus, Edit2, Trash2, ArrowLeft, LogOut, Database, 
+  Home, Info, UserPlus, Bell, FileText, Calendar, 
+  MapPin, Users, ClipboardList, Search, X, Eye, ThumbsUp 
+} from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { loginWithGoogle, logout } from '../firebase';
 import toast from 'react-hot-toast';
-import { BLOG_POSTS, ACTIVITIES, CHAPTERS } from '../data';
+import { BLOG_POSTS, ACTIVITIES, CHAPTERS, COMMITTEE_MEMBERS } from '../data';
 import ImageUpload from '../components/ImageUpload';
-import { HeroData, AboutData, Registration } from '../types';
+import { HeroData, AboutData, Registration, CommitteeMember } from '../types';
 
-type TabType = 'posts' | 'activities' | 'chapters' | 'hero' | 'about' | 'join' | 'announcement' | 'registrations';
+type TabType = 'posts' | 'activities' | 'chapters' | 'hero' | 'about' | 'join' | 'announcement' | 'registrations' | 'committee';
 
 export default function Admin() {
   const { 
     user,
-    posts, activities, chapters, heroData, aboutData, joinData, announcementData, registrations,
+    posts, activities, chapters, heroData, aboutData, joinData, announcementData, registrations, committee,
     addPost, updatePost, deletePost,
     addActivity, updateActivity, deleteActivity,
     addChapter, updateChapter, deleteChapter,
     updateHero, updateAbout, updateJoin, updateAnnouncement,
-    deleteRegistration
+    addRegistration, updateRegistration, deleteRegistration,
+    addCommitteeMember, updateCommitteeMember, deleteCommitteeMember
   } = useData();
 
   const [activeTab, setActiveTab] = useState<TabType>('posts');
   
-  // Basic states for forms
+  // Basic states for forms and search
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState<any>({});
+  const [searchTerm, setSearchTerm] = useState<string>('');
 
   const formRef = useRef<HTMLDivElement>(null);
   
@@ -38,7 +44,7 @@ export default function Admin() {
       setFormData(aboutData || { title: '', description1: '', description2: '', statsMembers: '', imageUrl: '' });
       setEditingId('about');
     } else if (activeTab === 'join') {
-      setFormData(joinData || { title: '', description: '', adminWhatsApp: '', imageUrl: '' });
+      setFormData(joinData || { title: '', description: '', adminWhatsApp: '6289616746342', imageUrl: '' });
       setEditingId('join');
     } else if (activeTab === 'announcement') {
       setFormData(announcementData || { 
@@ -56,7 +62,6 @@ export default function Admin() {
 
   useEffect(() => {
     if (editingId && formRef.current) {
-      // Small delay to ensure the element is rendered and not hidden
       setTimeout(() => {
         formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }, 100);
@@ -66,21 +71,21 @@ export default function Admin() {
   if (!user) {
     return (
       <div className="min-h-screen bg-theme-bg text-theme-text font-sans flex items-center justify-center p-4">
-        <div className="bg-theme-surface border border-theme-border p-8 rounded-2xl max-w-md w-full text-center">
+        <div className="bg-theme-surface border border-theme-border/60 p-8 rounded-3xl max-w-md w-full text-center shadow-2xl">
           <div className="flex justify-center mb-6">
             <img src="/logo.jpg" alt="ACC Logo" className="h-20 w-auto object-contain" />
           </div>
-          <h1 className="text-2xl font-bold mb-2">Admin Login</h1>
-          <p className="text-theme-muted mb-8">Silakan login dengan akun Google Anda untuk mengakses halaman admin.</p>
+          <h1 className="text-2xl font-black mb-2">Admin Dashboard</h1>
+          <p className="text-theme-muted text-sm mb-8 leading-relaxed">Silakan login dengan akun admin terdaftar Anda untuk mengakses pengelolaan aplikasi Auto Claser Club.</p>
           <button 
             onClick={loginWithGoogle}
-            className="w-full bg-theme-text text-theme-text-inv font-bold py-3 px-4 rounded-lg hover:bg-theme-border transition-colors"
+            className="w-full bg-theme-primary text-white font-extrabold py-3 px-4 rounded-xl hover:bg-blue-600 transition-all shadow-lg shadow-theme-primary/10 cursor-pointer text-sm"
           >
-            Sign in with Google
+            Masuk dengan Google Auth
           </button>
-          <div className="mt-6">
-            <Link to="/" className="text-theme-muted hover:text-theme-text transition-colors text-sm">
-              &larr; Kembali ke Beranda
+          <div className="mt-8 border-t border-theme-border/50 pt-4">
+            <Link to="/" className="text-theme-muted hover:text-theme-primary transition-colors text-xs font-semibold">
+              &larr; Kembali ke Beranda Utama
             </Link>
           </div>
         </div>
@@ -99,7 +104,7 @@ export default function Admin() {
     } else if (activeTab === 'about') {
       setFormData(aboutData || { title: '', description1: '', description2: '', statsMembers: '', imageUrl: '' });
     } else if (activeTab === 'join') {
-      setFormData(joinData || { title: '', description: '', adminWhatsApp: '', imageUrl: '' });
+      setFormData(joinData || { title: '', description: '', adminWhatsApp: '6289616746342', imageUrl: '' });
     } else if (activeTab === 'announcement') {
       setFormData(announcementData || { 
         isActive: true, 
@@ -134,6 +139,26 @@ export default function Admin() {
       } else if (editingId) {
         savePromise = updateChapter(editingId, formData);
       }
+    } else if (activeTab === 'committee') {
+      if (editingId === 'new') {
+        savePromise = addCommitteeMember({ ...formData, id: Date.now().toString() });
+      } else if (editingId) {
+        savePromise = updateCommitteeMember(editingId, formData);
+      }
+    } else if (activeTab === 'registrations') {
+      if (editingId === 'new') {
+        savePromise = addRegistration({
+          name: formData.name || '',
+          phone: formData.phone || '',
+          address: formData.address || '',
+          vehicleType: formData.vehicleType || '',
+          vehicleYear: formData.vehicleYear || '',
+          licensePlate: formData.licensePlate || '',
+          createdAt: formData.createdAt || new Date().toISOString()
+        });
+      } else if (editingId) {
+        savePromise = updateRegistration(editingId, formData);
+      }
     } else if (activeTab === 'hero') {
       savePromise = updateHero({ ...formData, id: 'hero' });
     } else if (activeTab === 'about') {
@@ -145,7 +170,7 @@ export default function Admin() {
     }
 
     toast.promise(savePromise, {
-      loading: 'Menyimpan...',
+      loading: 'Menyimpan ke database...',
       success: 'Data berhasil disimpan!',
       error: 'Gagal menyimpan data.'
     }).then(() => {
@@ -156,304 +181,1034 @@ export default function Admin() {
   };
 
   const handleDelete = async (id: string) => {    
+    if (!window.confirm('Apakah Anda yakin ingin menghapus data ini secara permanen?')) return;
+    
     let deletePromise: Promise<any> = Promise.resolve();
     if (activeTab === 'posts') deletePromise = deletePost(id);
     if (activeTab === 'activities') deletePromise = deleteActivity(id);
     if (activeTab === 'chapters') deletePromise = deleteChapter(id);
+    if (activeTab === 'committee') deletePromise = deleteCommitteeMember(id);
     if (activeTab === 'registrations') deletePromise = deleteRegistration(id);
 
     toast.promise(deletePromise, {
-      loading: 'Menghapus...',
-      success: 'Data berhasil dihapus!',
-      error: 'Gagal menghapus data.'
+      loading: 'Menghapus data...',
+      success: 'Data sukses terhapus!',
+      error: 'Gagal menghapus data dari Firestore.'
     });
   };
 
   const handleSeedData = async () => {    
+    if (!window.confirm('Ingin mengisi data awal (berita, agenda, chapter, & pengurus)? Tindakan ini berguna demi demo aplikasi pertama kali dan hanya akan mengisi bagian data yang masih kosong.')) return;
     const seedPromise = (async () => {
-      // Create concurrent additions
-      const allPromises = [
-        ...BLOG_POSTS.map(p => addPost(p)),
-        ...ACTIVITIES.map(a => addActivity(a)),
-        ...CHAPTERS.map(c => addChapter(c))
-      ];
+      const allPromises = [];
+      if (posts.length === 0) {
+        BLOG_POSTS.forEach(p => allPromises.push(addPost(p)));
+      }
+      if (activities.length === 0) {
+        ACTIVITIES.forEach(a => allPromises.push(addActivity(a)));
+      }
+      if (chapters.length === 0) {
+        CHAPTERS.forEach(c => allPromises.push(addChapter(c)));
+      }
+      if (committee.length === 0) {
+        COMMITTEE_MEMBERS.forEach(m => allPromises.push(addCommitteeMember(m)));
+      }
       await Promise.all(allPromises);
     })();
 
     toast.promise(seedPromise, {
       loading: 'Sedang mengisi data...',
-      success: 'Data awal berhasil ditambahkan!',
-      error: 'Gagal mengisi data.'
+      success: 'Semua data awal berhasil ditambahkan!',
+      error: 'Gagal melakukan seed data.'
     });
   };
 
   const renderFormInputs = () => {
     if (activeTab === 'posts') {
       return (
-        <>
-          <input className="w-full bg-theme-surface border border-theme-border p-2 rounded mb-2 text-theme-text" placeholder="Title" value={formData.title || ''} onChange={e => setFormData({...formData, title: e.target.value})} />
-          <textarea className="w-full bg-theme-surface border border-theme-border p-2 rounded mb-2 text-theme-text min-h-32" placeholder="Excerpt" value={formData.excerpt || ''} onChange={e => setFormData({...formData, excerpt: e.target.value})} />
-          <input className="w-full bg-theme-surface border border-theme-border p-2 rounded mb-2 text-theme-text" placeholder="Date" value={formData.date || ''} onChange={e => setFormData({...formData, date: e.target.value})} />
-          <input className="w-full bg-theme-surface border border-theme-border p-2 rounded mb-2 text-theme-text" placeholder="Category" value={formData.category || ''} onChange={e => setFormData({...formData, category: e.target.value})} />
-          <ImageUpload value={formData.imageUrl || ''} onChange={url => setFormData({...formData, imageUrl: url})} />
-        </>
+        <div className="space-y-4">
+          <div>
+            <label className="block text-xs font-bold tracking-wider text-theme-muted uppercase mb-1.5">Judul Berita</label>
+            <input className="w-full bg-theme-bg border border-theme-border p-3 rounded-xl text-theme-text text-sm focus:outline-none focus:ring-2 focus:ring-theme-primary/30 focus:border-theme-primary transition-all duration-200" placeholder="Masukkan judul berita utama..." value={formData.title || ''} onChange={e => setFormData({...formData, title: e.target.value})} />
+          </div>
+          <div>
+            <label className="block text-xs font-bold tracking-wider text-theme-muted uppercase mb-1.5">Kutipan / Deskripsi Ringkas</label>
+            <textarea className="w-full bg-theme-bg border border-theme-border p-3 rounded-xl text-theme-text text-sm focus:outline-none focus:ring-2 focus:ring-theme-primary/30 focus:border-theme-primary transition-all duration-200 min-h-20" placeholder="Kutipan singkat berita untuk di beranda..." value={formData.excerpt || ''} onChange={e => setFormData({...formData, excerpt: e.target.value})} />
+          </div>
+          <div>
+            <label className="block text-xs font-bold tracking-wider text-theme-muted uppercase mb-1.5">Isi Berita Lengkap</label>
+            <textarea className="w-full bg-theme-bg border border-theme-border p-3 rounded-xl text-theme-text text-sm focus:outline-none focus:ring-2 focus:ring-theme-primary/30 focus:border-theme-primary transition-all duration-200 min-h-40" placeholder="Masukkan isi lengkap berita..." value={formData.content || ''} onChange={e => setFormData({...formData, content: e.target.value})} />
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-bold tracking-wider text-theme-muted uppercase mb-1.5">Tanggal Post</label>
+              <input className="w-full bg-theme-bg border border-theme-border p-3 rounded-xl text-theme-text text-sm focus:outline-none focus:ring-2 focus:ring-theme-primary/30 focus:border-theme-primary transition-all duration-200" placeholder="Contoh: 15 Jun 2026" value={formData.date || ''} onChange={e => setFormData({...formData, date: e.target.value})} />
+            </div>
+            <div>
+              <label className="block text-xs font-bold tracking-wider text-theme-muted uppercase mb-1.5">Kategori / Tag</label>
+              <input className="w-full bg-theme-bg border border-theme-border p-3 rounded-xl text-theme-text text-sm focus:outline-none focus:ring-2 focus:ring-theme-primary/30 focus:border-theme-primary transition-all duration-200" placeholder="Contoh: Kegiatan, Touring, Nasional" value={formData.category || ''} onChange={e => setFormData({...formData, category: e.target.value})} />
+            </div>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-xs font-bold tracking-wider text-theme-muted uppercase mb-1.5">Nama Pembuat / Penulis</label>
+              <input className="w-full bg-theme-bg border border-theme-border p-3 rounded-xl text-theme-text text-sm focus:outline-none focus:ring-2 focus:ring-theme-primary/30 focus:border-theme-primary transition-all duration-200" placeholder="Contoh: Aris Munandar" value={formData.authorName || ''} onChange={e => setFormData({...formData, authorName: e.target.value})} />
+            </div>
+            <div>
+              <label className="block text-xs font-bold tracking-wider text-theme-muted uppercase mb-1.5">Jabatan Pembuat</label>
+              <input className="w-full bg-theme-bg border border-theme-border p-3 rounded-xl text-theme-text text-sm focus:outline-none focus:ring-2 focus:ring-theme-primary/30 focus:border-theme-primary transition-all duration-200" placeholder="Contoh: Divisi Humas & Media" value={formData.authorRole || ''} onChange={e => setFormData({...formData, authorRole: e.target.value})} />
+            </div>
+            <div>
+              <label className="block text-xs font-bold tracking-wider text-theme-muted uppercase mb-1.5">Foto URL Pembuat (Opsional)</label>
+              <input className="w-full bg-theme-bg border border-theme-border p-3 rounded-xl text-theme-text text-sm focus:outline-none focus:ring-2 focus:ring-theme-primary/30 focus:border-theme-primary transition-all duration-200" placeholder="Link foto atau kosongkan" value={formData.authorAvatar || ''} onChange={e => setFormData({...formData, authorAvatar: e.target.value})} />
+            </div>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-bold tracking-wider text-theme-muted uppercase mb-1.5">Suka (Likes Count)</label>
+              <input type="number" className="w-full bg-theme-bg border border-theme-border p-3 rounded-xl text-theme-text text-sm focus:outline-none focus:ring-2 focus:ring-theme-primary/30 focus:border-theme-primary transition-all duration-200" value={formData.likes ?? 0} onChange={e => setFormData({...formData, likes: parseInt(e.target.value) || 0})} />
+            </div>
+            <div>
+              <label className="block text-xs font-bold tracking-wider text-theme-muted uppercase mb-1.5">Dilihat (Views Count)</label>
+              <input type="number" className="w-full bg-theme-bg border border-theme-border p-3 rounded-xl text-theme-text text-sm focus:outline-none focus:ring-2 focus:ring-theme-primary/30 focus:border-theme-primary transition-all duration-200" value={formData.views ?? 0} onChange={e => setFormData({...formData, views: parseInt(e.target.value) || 0})} />
+            </div>
+          </div>
+          <div>
+            <label className="block text-xs font-bold tracking-wider text-theme-muted uppercase mb-1.5">Foto Utama Berita</label>
+            <ImageUpload value={formData.imageUrl || ''} onChange={url => setFormData({...formData, imageUrl: url})} />
+          </div>
+        </div>
       );
     }
     if (activeTab === 'activities') {
       return (
-        <>
-          <input className="w-full bg-theme-surface border border-theme-border p-2 rounded mb-2 text-theme-text" placeholder="Title" value={formData.title || ''} onChange={e => setFormData({...formData, title: e.target.value})} />
-          <input className="w-full bg-theme-surface border border-theme-border p-2 rounded mb-2 text-theme-text" placeholder="Location" value={formData.location || ''} onChange={e => setFormData({...formData, location: e.target.value})} />
-          <input className="w-full bg-theme-surface border border-theme-border p-2 rounded mb-2 text-theme-text" placeholder="Date" value={formData.date || ''} onChange={e => setFormData({...formData, date: e.target.value})} />
-          <ImageUpload value={formData.imageUrl || ''} onChange={url => setFormData({...formData, imageUrl: url})} />
-        </>
+        <div className="space-y-4">
+          <div>
+            <label className="block text-xs font-bold tracking-wider text-theme-muted uppercase mb-1.5">Nama Agenda / Kegiatan</label>
+            <input className="w-full bg-theme-bg border border-theme-border p-3 rounded-xl text-theme-text text-sm focus:outline-none focus:ring-2 focus:ring-theme-primary/30 focus:border-theme-primary transition-all duration-200" placeholder="Nama agenda (Contoh: Kopdar Akbar Gabungan...)" value={formData.title || ''} onChange={e => setFormData({...formData, title: e.target.value})} />
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-bold tracking-wider text-theme-muted uppercase mb-1.5">Lokasi Kegiatan</label>
+              <input className="w-full bg-theme-bg border border-theme-border p-3 rounded-xl text-theme-text text-sm focus:outline-none focus:ring-2 focus:ring-theme-primary/30 focus:border-theme-primary transition-all duration-200" placeholder="Contoh: Gunung Mas, Bogor" value={formData.location || ''} onChange={e => setFormData({...formData, location: e.target.value})} />
+            </div>
+            <div>
+              <label className="block text-xs font-bold tracking-wider text-theme-muted uppercase mb-1.5">Tanggal Acara</label>
+              <input className="w-full bg-theme-bg border border-theme-border p-3 rounded-xl text-theme-text text-sm focus:outline-none focus:ring-2 focus:ring-theme-primary/30 focus:border-theme-primary transition-all duration-200" placeholder="Contoh: Sabtu, 27 Juni 2026" value={formData.date || ''} onChange={e => setFormData({...formData, date: e.target.value})} />
+            </div>
+          </div>
+          <div>
+            <label className="block text-xs font-bold tracking-wider text-theme-muted uppercase mb-1.5">Banner Promosi / Kegiatan</label>
+            <ImageUpload value={formData.imageUrl || ''} onChange={url => setFormData({...formData, imageUrl: url})} />
+          </div>
+        </div>
       );
     }
     if (activeTab === 'chapters') {
       return (
-        <>
-          <input className="w-full bg-theme-surface border border-theme-border p-2 rounded mb-2 text-theme-text" placeholder="Name" value={formData.name || ''} onChange={e => setFormData({...formData, name: e.target.value})} />
-          <input className="w-full bg-theme-surface border border-theme-border p-2 rounded mb-2 text-theme-text" type="number" placeholder="Member Count" value={formData.memberCount || 0} onChange={e => setFormData({...formData, memberCount: parseInt(e.target.value) || 0})} />
-        </>
+        <div className="space-y-4">
+          <div>
+            <label className="block text-xs font-bold tracking-wider text-theme-muted uppercase mb-1.5">Nama Regional Chapter</label>
+            <input className="w-full bg-theme-bg border border-theme-border p-3 rounded-xl text-theme-text text-sm focus:outline-none focus:ring-2 focus:ring-theme-primary/30 focus:border-theme-primary transition-all duration-200" placeholder="Masukkan nama regional (Contoh: Jawa Timur)" value={formData.name || ''} onChange={e => setFormData({...formData, name: e.target.value})} />
+          </div>
+          <div>
+            <label className="block text-xs font-bold tracking-wider text-theme-muted uppercase mb-1.5">Jumlah Anggota Terdaftar</label>
+            <input className="w-full bg-theme-bg border border-theme-border p-3 rounded-xl text-theme-text text-sm focus:outline-none focus:ring-2 focus:ring-theme-primary/30 focus:border-theme-primary transition-all duration-200" type="number" placeholder="Contoh: 120" value={formData.memberCount || 0} onChange={e => setFormData({...formData, memberCount: parseInt(e.target.value) || 0})} />
+          </div>
+        </div>
+      );
+    }
+    if (activeTab === 'committee') {
+      return (
+        <div className="space-y-4">
+          <div>
+            <label className="block text-xs font-bold tracking-wider text-theme-muted uppercase mb-1.5">Nama Lengkap Pengurus</label>
+            <input className="w-full bg-theme-bg border border-theme-border p-3 rounded-xl text-theme-text text-sm focus:outline-none focus:ring-2 focus:ring-theme-primary/30 focus:border-theme-primary transition-all duration-200" placeholder="Nama Lengkap dengan Gelar" value={formData.name || ''} onChange={e => setFormData({...formData, name: e.target.value})} />
+          </div>
+          <div>
+            <label className="block text-xs font-bold tracking-wider text-theme-muted uppercase mb-1.5">Jabatan / Peran Struktur</label>
+            <input className="w-full bg-theme-bg border border-theme-border p-3 rounded-xl text-theme-text text-sm focus:outline-none focus:ring-2 focus:ring-theme-primary/30 focus:border-theme-primary transition-all duration-200" placeholder="Contoh: Ketua Umum (President) / Sekretaris Jenderal" value={formData.role || ''} onChange={e => setFormData({...formData, role: e.target.value})} />
+          </div>
+          <div>
+            <label className="block text-xs font-bold tracking-wider text-theme-muted uppercase mb-1.5">Deskripsi Peran &amp; Tanggung Jawab / Biografi Singkat</label>
+            <textarea className="w-full bg-theme-bg border border-theme-border p-3 rounded-xl text-theme-text text-sm focus:outline-none focus:ring-2 focus:ring-theme-primary/30 focus:border-theme-primary transition-all duration-200 min-h-24" placeholder="Tuliskan deskripsi ringkas tugas atau bio singkat..." value={formData.description || ''} onChange={e => setFormData({...formData, description: e.target.value})} />
+          </div>
+          <div>
+            <label className="block text-xs font-bold tracking-wider text-theme-muted uppercase mb-1.5">Urutan Prioritas Tampilan (Angka)</label>
+            <input className="w-full bg-theme-bg border border-theme-border p-3 rounded-xl text-theme-text text-sm focus:outline-none focus:ring-2 focus:ring-theme-primary/30 focus:border-theme-primary transition-all duration-200" type="number" placeholder="Angka lebih kecil tampil di atas (Contoh: 1, 2, 3)" value={formData.displayOrder || 0} onChange={e => setFormData({...formData, displayOrder: parseInt(e.target.value) || 0})} />
+          </div>
+          <div>
+            <label className="block text-xs font-bold tracking-wider text-theme-muted uppercase mb-1.5">Foto Profil Resmi</label>
+            <ImageUpload value={formData.imageUrl || ''} onChange={url => setFormData({...formData, imageUrl: url})} />
+          </div>
+        </div>
       );
     }
     if (activeTab === 'hero') {
       return (
-        <>
-          <label className="block text-sm text-theme-muted mb-1">Judul Utama</label>
-          <input className="w-full bg-theme-surface border border-theme-border p-2 rounded mb-2 text-theme-text" placeholder="contoh: Satu Aspal, Satu Keluarga." value={formData.title || ''} onChange={e => setFormData({...formData, title: e.target.value})} />
-          <label className="block text-sm text-theme-muted mb-1">Sub Judul</label>
-          <input className="w-full bg-theme-surface border border-theme-border p-2 rounded mb-2 text-theme-text" placeholder="contoh: Solidaritas Tanpa Batas" value={formData.subtitle || ''} onChange={e => setFormData({...formData, subtitle: e.target.value})} />
-          <label className="block text-sm text-theme-muted mb-1">Deskripsi Singkat</label>
-          <textarea className="w-full bg-theme-surface border border-theme-border p-2 rounded mb-2 text-theme-text min-h-32" placeholder="Deskripsi Singkat" value={formData.description || ''} onChange={e => setFormData({...formData, description: e.target.value})} />
-          <label className="block text-sm text-theme-muted mb-1">Gambar Latar Hero</label>
-          <ImageUpload value={formData.imageUrl || ''} onChange={url => setFormData({...formData, imageUrl: url})} />
-        </>
+        <div className="space-y-4">
+          <div>
+            <label className="block text-xs font-bold tracking-wider text-theme-muted uppercase mb-1.5">Judul Utama Beranda (Headline)</label>
+            <input className="w-full bg-theme-bg border border-theme-border p-3 rounded-xl text-theme-text text-sm focus:outline-none focus:ring-2 focus:ring-theme-primary/30 focus:border-theme-primary transition-all duration-200" placeholder="Contoh:Satu Aspal, Satu Jiwa, Sejuta Cerita." value={formData.title || ''} onChange={e => setFormData({...formData, title: e.target.value})} />
+          </div>
+          <div>
+            <label className="block text-xs font-bold tracking-wider text-theme-muted uppercase mb-1.5">Sub Judul (Motto)</label>
+            <input className="w-full bg-theme-bg border border-theme-border p-3 rounded-xl text-theme-text text-sm focus:outline-none focus:ring-2 focus:ring-theme-primary/30 focus:border-theme-primary transition-all duration-200" placeholder="Contoh: Solidaritas Tanpa Batas" value={formData.subtitle || ''} onChange={e => setFormData({...formData, subtitle: e.target.value})} />
+          </div>
+          <div>
+            <label className="block text-xs font-bold tracking-wider text-theme-muted uppercase mb-1.5">Deskripsi Singkat Klub</label>
+            <textarea className="w-full bg-theme-bg border border-theme-border p-3 rounded-xl text-theme-text text-sm focus:outline-none focus:ring-2 focus:ring-theme-primary/30 focus:border-theme-primary transition-all duration-200 min-h-32" placeholder="Tuliskan deskripsi utama pencitraan klub otomotif ACC di halaman depan..." value={formData.description || ''} onChange={e => setFormData({...formData, description: e.target.value})} />
+          </div>
+          <div>
+            <label className="block text-xs font-bold tracking-wider text-theme-muted uppercase mb-1.5">Gambar Background Utama (Hero Wallpaper)</label>
+            <ImageUpload value={formData.imageUrl || ''} onChange={url => setFormData({...formData, imageUrl: url})} />
+          </div>
+        </div>
       );
     }
     if (activeTab === 'about') {
       return (
-        <>
-          <label className="block text-sm text-theme-muted mb-1">Judul</label>
-          <input className="w-full bg-theme-surface border border-theme-border p-2 rounded mb-2 text-theme-text" placeholder="contoh: Tentang Auto Claser Club" value={formData.title || ''} onChange={e => setFormData({...formData, title: e.target.value})} />
-          <label className="block text-sm text-theme-muted mb-1">Paragraf 1</label>
-          <textarea className="w-full bg-theme-surface border border-theme-border p-2 rounded mb-2 text-theme-text min-h-32" placeholder="Paragraf Pertama" value={formData.description1 || ''} onChange={e => setFormData({...formData, description1: e.target.value})} />
-          <label className="block text-sm text-theme-muted mb-1">Paragraf 2</label>
-          <textarea className="w-full bg-theme-surface border border-theme-border p-2 rounded mb-2 text-theme-text min-h-32" placeholder="Paragraf Kedua" value={formData.description2 || ''} onChange={e => setFormData({...formData, description2: e.target.value})} />
-          <label className="block text-sm text-theme-muted mb-1">Teks Member Aktif (contoh: 500+)</label>
-          <input className="w-full bg-theme-surface border border-theme-border p-2 rounded mb-2 text-theme-text" placeholder="contoh: 500+" value={formData.statsMembers || ''} onChange={e => setFormData({...formData, statsMembers: e.target.value})} />
-          <label className="block text-sm text-theme-muted mb-1">Gambar Tentang Kami</label>
-          <ImageUpload value={formData.imageUrl || ''} onChange={url => setFormData({...formData, imageUrl: url})} />
-        </>
+        <div className="space-y-4">
+          <div>
+            <label className="block text-xs font-bold tracking-wider text-theme-muted uppercase mb-1.5">Judul Tentang Kami</label>
+            <input className="w-full bg-theme-bg border border-theme-border p-3 rounded-xl text-theme-text text-sm focus:outline-none focus:ring-2 focus:ring-theme-primary/30 focus:border-theme-primary transition-all duration-200" placeholder="Contoh: Kiprah Auto Claser Club Nasional" value={formData.title || ''} onChange={e => setFormData({...formData, title: e.target.value})} />
+          </div>
+          <div>
+            <label className="block text-xs font-bold tracking-wider text-theme-muted uppercase mb-1.5">Paragraf Pertama (Sejarah Klub)</label>
+            <textarea className="w-full bg-theme-bg border border-theme-border p-3 rounded-xl text-theme-text text-sm focus:outline-none focus:ring-2 focus:ring-theme-primary/30 focus:border-theme-primary transition-all duration-200 min-h-32" placeholder="Isi paragraf pertama mengenai sejarah peluncuran klub..." value={formData.description1 || ''} onChange={e => setFormData({...formData, description1: e.target.value})} />
+          </div>
+          <div>
+            <label className="block text-xs font-bold tracking-wider text-theme-muted uppercase mb-1.5">Paragraf Kedua (Visi-Misi &amp; Komitmen)</label>
+            <textarea className="w-full bg-theme-bg border border-theme-border p-3 rounded-xl text-theme-text text-sm focus:outline-none focus:ring-2 focus:ring-theme-primary/30 focus:border-theme-primary transition-all duration-200 min-h-32" placeholder="Isi paragraf kedua terkait visi-misi sosial baksos..." value={formData.description2 || ''} onChange={e => setFormData({...formData, description2: e.target.value})} />
+          </div>
+          <div>
+            <label className="block text-xs font-bold tracking-wider text-theme-muted uppercase mb-1.5">Teks Statistik Anggota (Contoh: 850+)</label>
+            <input className="w-full bg-theme-bg border border-theme-border p-3 rounded-xl text-theme-text text-sm focus:outline-none focus:ring-2 focus:ring-theme-primary/30 focus:border-theme-primary transition-all duration-200" placeholder="Contoh: 1000+ Member Nasional" value={formData.statsMembers || ''} onChange={e => setFormData({...formData, statsMembers: e.target.value})} />
+          </div>
+          <div>
+            <label className="block text-xs font-bold tracking-wider text-theme-muted uppercase mb-1.5">Gambar Samping Konten (Tentang Kami)</label>
+            <ImageUpload value={formData.imageUrl || ''} onChange={url => setFormData({...formData, imageUrl: url})} />
+          </div>
+        </div>
       );
     }
     if (activeTab === 'join') {
       return (
-        <>
-          <label className="block text-sm text-theme-muted mb-1">Judul Pendaftaran</label>
-          <input className="w-full bg-theme-surface border border-theme-border p-2 rounded mb-2 text-theme-text" placeholder="contoh: Bergabung Bersama Kami" value={formData.title || ''} onChange={e => setFormData({...formData, title: e.target.value})} />
-          <label className="block text-sm text-theme-muted mb-1">Deskripsi/Instruksi</label>
-          <textarea className="w-full bg-theme-surface border border-theme-border p-2 rounded mb-2 text-theme-text min-h-32" placeholder="contoh: Isi formulir berikut ini..." value={formData.description || ''} onChange={e => setFormData({...formData, description: e.target.value})} />
-          <label className="block text-sm text-theme-muted mb-1">Nomor WhatsApp Admin (Awal 62...)</label>
-          <input className="w-full bg-theme-surface border border-theme-border p-2 rounded mb-2 text-theme-text" placeholder="contoh: 62812345678" value={formData.adminWhatsApp || ''} onChange={e => setFormData({...formData, adminWhatsApp: e.target.value})} />
-          <label className="block text-sm text-theme-muted mb-1">Gambar Latar Pendaftaran</label>
-          <ImageUpload value={formData.imageUrl || ''} onChange={url => setFormData({...formData, imageUrl: url})} />
-        </>
+        <div className="space-y-4">
+          <div>
+            <label className="block text-xs font-bold tracking-wider text-theme-muted uppercase mb-1.5">Judul Formulir Pendaftaran</label>
+            <input className="w-full bg-theme-bg border border-theme-border p-3 rounded-xl text-theme-text text-sm focus:outline-none focus:ring-2 focus:ring-theme-primary/30 focus:border-theme-primary transition-all duration-200" placeholder="Contoh: Formulir Pendaftaran Member Baru" value={formData.title || ''} onChange={e => setFormData({...formData, title: e.target.value})} />
+          </div>
+          <div>
+            <label className="block text-xs font-bold tracking-wider text-theme-muted uppercase mb-1.5">Petunjuk Pendaftaran</label>
+            <textarea className="w-full bg-theme-bg border border-theme-border p-3 rounded-xl text-theme-text text-sm focus:outline-none focus:ring-2 focus:ring-theme-primary/30 focus:border-theme-primary transition-all duration-200 min-h-32" placeholder="Contoh: Daftarkan dirimu dan isilah data mobil pribadi di bawah secara detail..." value={formData.description || ''} onChange={e => setFormData({...formData, description: e.target.value})} />
+          </div>
+          <div>
+            <label className="block text-xs font-bold tracking-wider text-theme-muted uppercase mb-1.5">Nomor WhatsApp Admin Induk (Gunakan Format 62...)</label>
+            <input className="w-full bg-theme-bg border border-theme-border p-3 rounded-xl text-theme-text text-sm focus:outline-none focus:ring-2 focus:ring-theme-primary/30 focus:border-theme-primary transition-all duration-200" placeholder="Wajib diawali dengan kode negara (Contoh: 628123456789)" value={formData.adminWhatsApp || ''} onChange={e => setFormData({...formData, adminWhatsApp: e.target.value})} />
+          </div>
+          <div>
+            <label className="block text-xs font-bold tracking-wider text-theme-muted uppercase mb-1.5">Gambar Latar Belakang Formulir</label>
+            <ImageUpload value={formData.imageUrl || ''} onChange={url => setFormData({...formData, imageUrl: url})} />
+          </div>
+        </div>
       );
     }
     if (activeTab === 'announcement') {
       return (
-        <>
-          <label className="flex items-center gap-2 mb-4 cursor-pointer">
+        <div className="space-y-5">
+          <label className="flex items-center gap-3 bg-theme-bg border border-theme-border p-4 rounded-2xl cursor-pointer hover:border-theme-primary/45 transition-colors">
             <input 
               type="checkbox" 
               checked={formData.isActive || false} 
               onChange={e => setFormData({...formData, isActive: e.target.checked})}
-              className="w-5 h-5 accent-theme-primary"
+              className="w-5 h-5 accent-theme-primary border-theme-border rounded"
             />
-            <span className="text-theme-text font-bold">Aktifkan Pengumuman Popup</span>
+            <div>
+              <span className="text-theme-text font-black text-sm block">Aktifkan Popup Pengumuman</span>
+              <span className="text-xs text-theme-muted">Jika dicentang, popup akan otomatis tampil di layar utama pengguna baru.</span>
+            </div>
           </label>
-          <label className="block text-sm text-theme-muted mb-1">Judul Pengumuman</label>
-          <input className="w-full bg-theme-surface border border-theme-border p-2 rounded mb-2 text-theme-text" placeholder="contoh: Informasi Penting Mingguan" value={formData.title || ''} onChange={e => setFormData({...formData, title: e.target.value})} />
-          <label className="block text-sm text-theme-muted mb-1">Isi Pengumuman (Mendukung Markdown Markdown)</label>
-          <textarea className="w-full bg-theme-surface border border-theme-border p-2 rounded mb-2 text-theme-text min-h-32 font-mono text-sm" placeholder="Isi detail pengumuman..." value={formData.content || ''} onChange={e => setFormData({...formData, content: e.target.value})} />
-          <label className="block text-sm text-theme-muted mb-1">Gambar Banner (Opsional)</label>
-          <ImageUpload value={formData.imageUrl || ''} onChange={url => setFormData({...formData, imageUrl: url})} />
-        </>
+          <div>
+            <label className="block text-xs font-bold tracking-wider text-theme-muted uppercase mb-1.5">Judul Pengumuman Penting</label>
+            <input className="w-full bg-theme-bg border border-theme-border p-3 rounded-xl text-theme-text text-sm focus:outline-none focus:ring-2 focus:ring-theme-primary/30 focus:border-theme-primary transition-all duration-200" placeholder="Masukkan judul info terkini..." value={formData.title || ''} onChange={e => setFormData({...formData, title: e.target.value})} />
+          </div>
+          <div>
+            <label className="block text-xs font-bold tracking-wider text-theme-muted uppercase mb-1.5">Isi Informasi (Mendukung Teks Markdown)</label>
+            <textarea className="w-full bg-theme-bg border border-theme-border p-3 rounded-xl text-theme-text text-sm focus:outline-none focus:ring-2 focus:ring-theme-primary/30 focus:border-theme-primary transition-all duration-200 min-h-32 font-mono text-xs leading-relaxed" placeholder="Gunakan format markdown jika ingin membuat bullet points atau tebal..." value={formData.content || ''} onChange={e => setFormData({...formData, content: e.target.value})} />
+          </div>
+          <div>
+            <label className="block text-xs font-bold tracking-wider text-theme-muted uppercase mb-1.5">Gambar Banner Pengumuman</label>
+            <ImageUpload value={formData.imageUrl || ''} onChange={url => setFormData({...formData, imageUrl: url})} />
+          </div>
+        </div>
+      );
+    }
+    if (activeTab === 'registrations') {
+      return (
+        <div className="space-y-4">
+          <div>
+            <label className="block text-xs font-bold tracking-wider text-theme-muted uppercase mb-1.5 font-bold">Nama Lengkap Anggota</label>
+            <input className="w-full bg-theme-bg border border-theme-border p-3 rounded-xl text-theme-text text-sm focus:outline-none focus:ring-2 focus:ring-theme-primary/30 focus:border-theme-primary transition-all duration-200" placeholder="Contoh: Budi Santoso" value={formData.name || ''} onChange={e => setFormData({...formData, name: e.target.value})} />
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-bold tracking-wider text-theme-muted uppercase mb-1.5 font-bold">Nomor WhatsApp / Telp</label>
+              <input className="w-full bg-theme-bg border border-theme-border p-3 rounded-xl text-theme-text text-sm focus:outline-none focus:ring-2 focus:ring-theme-primary/30 focus:border-theme-primary transition-all duration-200" placeholder="Contoh: 081234567890" value={formData.phone || ''} onChange={e => setFormData({...formData, phone: e.target.value})} />
+            </div>
+            <div>
+              <label className="block text-xs font-bold tracking-wider text-theme-muted uppercase mb-1.5 font-bold">Model / Tipe Kendaraan</label>
+              <input className="w-full bg-theme-bg border border-theme-border p-3 rounded-xl text-theme-text text-sm focus:outline-none focus:ring-2 focus:ring-theme-primary/30 focus:border-theme-primary transition-all duration-200" placeholder="Contoh: Avanza / Jazz / Civic" value={formData.vehicleType || ''} onChange={e => setFormData({...formData, vehicleType: e.target.value})} />
+            </div>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-bold tracking-wider text-theme-muted uppercase mb-1.5 font-bold">Tahun Kendaraan</label>
+              <input className="w-full bg-theme-bg border border-theme-border p-3 rounded-xl text-theme-text text-sm focus:outline-none focus:ring-2 focus:ring-theme-primary/30 focus:border-theme-primary transition-all duration-200" placeholder="Contoh: 2020" value={formData.vehicleYear || ''} onChange={e => setFormData({...formData, vehicleYear: e.target.value})} />
+            </div>
+            <div>
+              <label className="block text-xs font-bold tracking-wider text-theme-muted uppercase mb-1.5 font-bold">No. Polisi / Plat</label>
+              <input className="w-full bg-theme-bg border border-theme-border p-3 rounded-xl text-theme-text text-sm focus:outline-none focus:ring-2 focus:ring-theme-primary/30 focus:border-theme-primary transition-all duration-200 font-mono text-sm uppercase" placeholder="Contoh: B 1234 ABC" value={formData.licensePlate || ''} onChange={e => setFormData({...formData, licensePlate: e.target.value})} />
+            </div>
+          </div>
+          <div>
+            <label className="block text-xs font-bold tracking-wider text-theme-muted uppercase mb-1.5 font-bold">Alamat / Domisili Lengkap</label>
+            <textarea className="w-full bg-theme-bg border border-theme-border p-3 rounded-xl text-theme-text text-sm focus:outline-none focus:ring-2 focus:ring-theme-primary/30 focus:border-theme-primary transition-all duration-200 min-h-20" placeholder="Alamat domisili lengkap..." value={formData.address || ''} onChange={e => setFormData({...formData, address: e.target.value})} />
+          </div>
+        </div>
       );
     }
     return null;
   };
 
-  const dataList = activeTab === 'posts' ? posts : activeTab === 'activities' ? activities : activeTab === 'registrations' ? registrations : chapters;
-  const isDataEmpty = posts.length === 0 && activities.length === 0 && chapters.length === 0;
-
-  return (
-    <div className="min-h-screen bg-theme-bg text-theme-text font-sans p-4 sm:p-8">
-      <div className="max-w-5xl mx-auto">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
-          <div className="flex items-center gap-4">
-            <Link to="/" className="text-theme-muted hover:text-theme-text transition-colors bg-theme-surface p-2 rounded-full">
-              <ArrowLeft size={20} />
-            </Link>
-            <h1 className="text-3xl font-bold">Admin Dashboard</h1>
+  const renderLivePreview = (type: TabType, data: any) => {
+    if (type === 'posts') {
+      const previewTitle = data.title || 'Contoh Judul Berita Utama';
+      const previewImage = data.imageUrl || 'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&q=80&w=600';
+      const previewExcerpt = data.excerpt || 'Ini adalah contoh deskripsi singkat berita yang akan muncul di halaman beranda...';
+      const previewDate = data.date || 'Hari ini';
+      const previewCategory = data.category || 'INFO';
+      return (
+        <div className="bg-theme-surface border border-theme-border rounded-2xl overflow-hidden shadow-md max-w-sm mx-auto">
+          <div className="h-44 overflow-hidden relative bg-theme-bg/50">
+            <img src={previewImage} alt="Preview" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+            <span className="absolute top-3 left-3 bg-theme-primary text-white text-[10px] uppercase font-extrabold px-2 py-0.5 rounded-md">
+              {previewCategory}
+            </span>
           </div>
-          <div className="flex items-center gap-2">
-            {isDataEmpty && (
-              <button 
-                onClick={handleSeedData}
-                className="flex items-center gap-2 text-sm text-theme-primary bg-theme-primary/10 border border-theme-primary px-4 py-2 rounded-md transition-colors"
-              >
-                <Database size={16} /> Seed Default Data
+          <div className="p-4 space-y-2">
+            <span className="text-xs text-theme-muted font-semibold">{previewDate}</span>
+            <h4 className="font-extrabold text-sm text-theme-text leading-tight line-clamp-2">
+              {previewTitle}
+            </h4>
+            <p className="text-xs text-theme-muted line-clamp-2 leading-relaxed">
+              {previewExcerpt}
+            </p>
+            <div className="flex items-center justify-between pt-3 border-t border-theme-border/50 text-xs">
+              <div className="flex items-center gap-1.5">
+                <div className="w-5 h-5 rounded-full bg-theme-bg flex items-center justify-center border border-theme-border text-[9px] font-bold overflow-hidden">
+                  {data.authorAvatar ? (
+                    <img src={data.authorAvatar} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                  ) : (
+                    (data.authorName || 'A')[0]
+                  )}
+                </div>
+                <span className="text-theme-text font-semibold truncate max-w-[100px]">{data.authorName || 'Admin'}</span>
+              </div>
+              <div className="flex items-center gap-3 text-theme-muted">
+                <span className="flex items-center gap-1"><ThumbsUp size={11} className="text-theme-primary" /> {data.likes || 0}</span>
+                <span className="flex items-center gap-1"><Eye size={11} /> {data.views || 0}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+    if (type === 'activities') {
+      const eventTitle = data.title || 'Kopdar / Kegiatan Sini';
+      const eventLocation = data.location || 'Lokasi Kegiatan';
+      const eventDate = data.date || 'Tanggal Pelaksanaan';
+      const eventImg = data.imageUrl || 'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&q=80&w=600';
+      return (
+        <div className="bg-theme-surface border border-theme-border rounded-2xl overflow-hidden shadow-md max-w-sm mx-auto">
+          <div className="h-32 overflow-hidden relative bg-theme-bg/50">
+            <img src={eventImg} alt="Preview" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex items-end p-3">
+              <span className="bg-green-600 text-white text-[9px] uppercase font-extrabold px-2 py-0.5 rounded-md">
+                Agenda Mendatang
+              </span>
+            </div>
+          </div>
+          <div className="p-4 space-y-3">
+            <h4 className="font-extrabold text-sm text-theme-text leading-tight">
+              {eventTitle}
+            </h4>
+            <div className="space-y-1.5 text-xs text-theme-muted">
+              <div className="flex items-center gap-2">
+                <Calendar size={13} className="text-theme-primary shrink-0" />
+                <span className="font-medium">{eventDate}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <MapPin size={13} className="text-theme-primary shrink-0" />
+                <span className="font-medium truncate">{eventLocation}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+    if (type === 'chapters') {
+      const chapterName = data.name || 'Nama Regional Chapter';
+      const chapterMembers = data.memberCount || 0;
+      return (
+        <div className="bg-gradient-to-tr from-theme-surface to-theme-bg border border-theme-border rounded-2xl p-5 text-center shadow-md max-w-sm mx-auto space-y-3 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-theme-primary/10 to-transparent rounded-full -mr-6 -mt-6"></div>
+          <div className="w-12 h-12 rounded-full bg-theme-primary/10 text-theme-primary flex items-center justify-center font-black mx-auto text-xl shadow-inner mb-2 border border-theme-primary/10">
+            📍
+          </div>
+          <h4 className="font-black text-base text-theme-text">{chapterName}</h4>
+          <div className="inline-block bg-theme-primary/15 text-theme-primary text-xs font-black uppercase tracking-wider px-3 py-1 rounded-full border border-theme-primary/15">
+            {chapterMembers} Member Terdaftar
+          </div>
+          <p className="text-[10px] text-theme-muted italic">Chapter Resmi ACC Terverifikasi</p>
+        </div>
+      );
+    }
+    if (type === 'committee') {
+      const memberName = data.name || 'Nama Pengurus Resmi';
+      const memberRole = data.role || 'Jabatan Kepengurusan';
+      const memberDesc = data.description || 'Deskripsi singkat tanggung jawab peran pengurus atau biografi singkat...';
+      const memberImg = data.imageUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=600';
+      return (
+        <div className="bg-theme-surface border border-theme-border rounded-2xl p-4 text-center shadow-md max-w-sm mx-auto space-y-3">
+          <div className="w-20 h-20 rounded-full border-2 border-theme-primary bg-theme-bg overflow-hidden mx-auto shadow-md">
+            <img src={memberImg} alt="Preview" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+          </div>
+          <div>
+            <h4 className="font-extrabold text-sm text-theme-text leading-tight">{memberName}</h4>
+            <p className="text-xs font-bold text-theme-primary uppercase tracking-widest mt-1">{memberRole}</p>
+          </div>
+          <p className="text-xs text-theme-muted line-clamp-3 leading-relaxed border-t border-theme-border/50 pt-2.5">
+            {memberDesc}
+          </p>
+          <div className="text-[10px] text-theme-muted font-semibold bg-theme-bg/50 px-2 py-0.5 rounded-md inline-block">
+            Urutan Tampilan: {data.displayOrder || 0}
+          </div>
+        </div>
+      );
+    }
+    if (type === 'registrations') {
+      const regName = data.name || 'Nama Pendatar Baru';
+      const regPhone = data.phone || 'Nomor Kontak';
+      const regVehicle = data.vehicleType || 'Tipe Mobil / Motor';
+      const regYear = data.vehicleYear || 'Tahun';
+      const regPlate = data.licensePlate || 'Plat Nomor';
+      const regAddr = data.address || 'Alamat Domisili';
+      return (
+        <div className="bg-gradient-to-b from-neutral-900 to-neutral-950 border border-neutral-800 text-white rounded-2xl p-5 shadow-xl max-w-sm mx-auto font-mono relative overflow-hidden text-left">
+          <div className="absolute top-0 right-0 p-3 bg-red-600/10 text-red-500 font-extrabold text-[9px] tracking-widest border-l border-b border-neutral-800 rounded-bl-xl uppercase leading-none">
+            ACC TICKET
+          </div>
+          <div className="flex items-center gap-3 border-b border-neutral-800 pb-3 mb-4">
+            <img src="/logo.jpg" alt="" className="h-8 w-auto object-contain bg-white/5 rounded-md p-0.5" />
+            <div>
+              <h5 className="font-black text-xs text-theme-primary tracking-widest leading-none">AUTO CLASER</h5>
+              <p className="text-[8px] text-neutral-400 font-bold uppercase leading-none tracking-wider mt-0.5">REGISTRATION TICKET</p>
+            </div>
+          </div>
+          <div className="space-y-2.5 text-[11px]">
+            <div>
+              <span className="text-neutral-500 text-[8px] uppercase block leading-none">NAMA ANGGOTA:</span>
+              <span className="text-white font-extrabold tracking-wider">{regName.toUpperCase()}</span>
+            </div>
+            <div>
+              <span className="text-neutral-500 text-[8px] uppercase block leading-none font-bold">KONTAK WA:</span>
+              <span className="text-neutral-300 font-bold">{regPhone}</span>
+            </div>
+            <div className="grid grid-cols-2 gap-3 pt-1 border-t border-neutral-900">
+              <div>
+                <span className="text-neutral-500 text-[8px] uppercase block leading-none font-bold">KENDARAAN:</span>
+                <span className="text-neutral-300 font-bold truncate block">{regVehicle}</span>
+              </div>
+              <div>
+                <span className="text-neutral-500 text-[8px] uppercase block leading-none font-bold font-mono">TAHUN / PLAT:</span>
+                <span className="text-neutral-300 font-bold">{regYear} - <span className="text-theme-primary font-black font-sans">{regPlate.toUpperCase()}</span></span>
+              </div>
+            </div>
+            <div className="pt-1.5 border-t border-neutral-900">
+              <span className="text-neutral-500 text-[8px] uppercase block leading-none font-bold">DOMISILI:</span>
+              <span className="text-neutral-400 line-clamp-2 text-[10px] leading-snug">{regAddr}</span>
+            </div>
+          </div>
+          <div className="mt-4 border-t border-dashed border-neutral-800 pt-3 flex justify-between items-center text-[8px] text-neutral-500">
+            <span>DRAFT PRATINJAU</span>
+            <span className="font-extrabold text-theme-primary">SOLIDARITY FOREVER</span>
+          </div>
+        </div>
+      );
+    }
+    if (type === 'hero') {
+      const heroTitle = data.title || 'Motto Utama Club Beranda';
+      const heroSub = data.subtitle || 'Sub-motto Club';
+      const heroDesc = data.description || 'Deskripsi singkat mengenai citra dari klub otomotif...';
+      const heroBackground = data.imageUrl || 'https://images.unsplash.com/photo-1511919884226-fd3cad34687c?auto=format&fit=crop&q=80&w=1000';
+      return (
+        <div className="relative rounded-2xl overflow-hidden shadow-lg h-52 flex flex-col justify-center items-center text-center p-4 bg-black">
+          <div className="absolute inset-0 z-0">
+            <img src={heroBackground} alt="" className="w-full h-full object-cover opacity-45" referrerPolicy="no-referrer" />
+            <div className="absolute inset-0 bg-gradient-to-b from-neutral-950/40 via-neutral-950/60 to-neutral-950"></div>
+          </div>
+          <div className="relative z-10 space-y-1.5 max-w-xs mx-auto">
+            <span className="text-theme-primary font-bold text-[9px] uppercase tracking-widest block bg-theme-primary/10 px-2 py-0.5 rounded-full border border-theme-primary/15 inline-block">
+              {heroSub || 'Solidaritas Tanpa Batas'}
+            </span>
+            <h4 className="text-xs font-black text-white leading-tight tracking-tight uppercase">
+              {heroTitle}
+            </h4>
+            <p className="text-[9px] text-neutral-300 line-clamp-2 leading-relaxed">
+              {heroDesc}
+            </p>
+            <div className="pt-2">
+              <button className="bg-theme-primary text-white font-extrabold text-[8px] uppercase tracking-wider px-3 py-1 rounded bg-blue-600">
+                Daftar Member
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+    if (type === 'about') {
+      const aboutTitle = data.title || 'Sejarah Kiprah Auto Claser Club';
+      const aboutD1 = data.description1 || 'Paragraf pertama deskripsi sejarah klub.';
+      const aboutD2 = data.description2 || 'Paragraf kedua berisi visi misi sosial.';
+      const aboutImg = data.imageUrl || 'https://images.unsplash.com/photo-1511919884226-fd3cad34687c?auto=format&fit=crop&q=80&w=1000';
+      const stats = data.statsMembers || '1000+ Member';
+      return (
+        <div className="bg-theme-surface border border-theme-border rounded-2xl p-4 shadow-md max-w-sm mx-auto space-y-3">
+          <div className="grid grid-cols-5 gap-3 items-center text-left">
+            <div className="col-span-2 h-20 rounded-xl overflow-hidden bg-theme-bg border border-theme-border/50 relative">
+              <img src={aboutImg} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+              <div className="absolute inset-0 bg-black/20"></div>
+            </div>
+            <div className="col-span-3 space-y-0.5">
+              <h5 className="font-extrabold text-xs text-theme-text leading-tight uppercase line-clamp-2">{aboutTitle}</h5>
+              <div className="inline-block bg-theme-primary text-white text-[9px] font-black uppercase px-2 py-0.5 rounded-md mt-1 bg-blue-600">
+                {stats}
+              </div>
+            </div>
+          </div>
+          <div className="text-[10px] text-theme-muted space-y-1 leading-relaxed bg-theme-bg/30 p-2.5 rounded-xl text-left">
+            <p className="line-clamp-2">{aboutD1}</p>
+            <p className="line-clamp-2 border-t border-theme-border/30 pt-1 mt-1">{aboutD2}</p>
+          </div>
+        </div>
+      );
+    }
+    if (type === 'join') {
+      const joinTitle = data.title || 'Formulir Pendaftaran Baru';
+      const joinDesc = data.description || 'Petunjuk cara pendaftaran anggota.';
+      const joinBtnWA = data.adminWhatsApp || '6289616746342';
+      const bgImage = data.imageUrl || 'https://images.unsplash.com/photo-1503370321287-320dcf7366d4?auto=format&fit=crop&q=80&w=1000';
+      return (
+        <div className="relative rounded-2xl overflow-hidden shadow-lg h-52 flex flex-col justify-end p-4 bg-black text-center">
+          <div className="absolute inset-0 z-0">
+            <img src={bgImage} alt="" className="w-full h-full object-cover opacity-50" referrerPolicy="no-referrer" />
+            <div className="absolute inset-0 bg-gradient-to-t from-neutral-950 via-neutral-950/70 to-neutral-950/35"></div>
+          </div>
+          <div className="relative z-10 space-y-1 w-full text-center">
+            <h4 className="text-xs font-black text-white uppercase tracking-tight leading-none mb-1">{joinTitle}</h4>
+            <p className="text-[9px] text-neutral-300 line-clamp-2 leading-relaxed max-w-xs mx-auto">
+              {joinDesc}
+            </p>
+            <div className="pt-2 w-full">
+              <div className="bg-green-600 text-white py-1.5 px-3 rounded-lg flex items-center justify-center gap-1.5 text-[9px] font-extrabold tracking-wide shadow-sm max-w-[200px] mx-auto bg-green-600">
+                <span>💬 Chat Admin WA ({joinBtnWA})</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+    if (type === 'announcement') {
+      const annActive = data.isActive ?? true;
+      const annTitle = data.title || 'Pengumuman Penting';
+      const annContent = data.content || 'Isi infomasi terbaru mengenai even kopdar atau lainnya...';
+      const annImg = data.imageUrl;
+      return (
+        <div className={`border rounded-2xl p-4 shadow-md max-w-sm mx-auto space-y-3 relative overflow-hidden transition-all duration-300 ${annActive ? 'bg-theme-surface border-theme-primary/30' : 'bg-theme-bg/40 border-theme-border/50 opacity-60'} text-left`}>
+          <div className="flex items-center justify-between">
+            <span className="text-[9px] uppercase font-bold tracking-widest text-theme-muted">Alert Banner</span>
+            <span className={`text-[8px] font-extrabold px-1.5 py-0.5 rounded ${annActive ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-400'}`}>
+              {annActive ? '● AKTIF' : '○ NONAKTIF'}
+            </span>
+          </div>
+          {annImg && (
+            <div className="h-20 w-full overflow-hidden rounded-xl bg-theme-bg border border-theme-border/50">
+              <img src={annImg} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+            </div>
+          )}
+          <div className="space-y-1">
+            <h5 className="font-extrabold text-xs text-theme-text leading-tight truncate">{annTitle}</h5>
+            <p className="text-[9px] text-theme-muted line-clamp-2 leading-relaxed mt-1 whitespace-pre-line">{annContent}</p>
+          </div>
+        </div>
+      );
+    }
+    return null;
+  };
+
+  const renderSidebarList = () => {
+    if (filteredDataList.length === 0) {
+      return (
+        <div className="border border-dashed border-theme-border/80 rounded-2xl p-8 text-center text-theme-muted text-sm bg-theme-surface/50 leading-relaxed shadow-sm">
+          Tidak ada data pencarian ditemukan. Silakan buat baru atau ganti filter Anda.
+        </div>
+      );
+    }
+
+    return (
+      <div className="bg-theme-surface border border-theme-border rounded-2xl divide-y divide-theme-border/60 overflow-hidden shadow-lg max-h-[500px] overflow-y-auto w-full min-w-0">
+        {filteredDataList.map((item: any) => {
+          let subtitle = '';
+          let avatarDisplay = null;
+
+          if (activeTab === 'committee') {
+            subtitle = item.role;
+            avatarDisplay = item.imageUrl ? (
+              <div className="h-10 w-10 rounded-xl overflow-hidden shrink-0 border border-theme-border/50 bg-theme-bg/40 flex items-center justify-center">
+                <img src={item.imageUrl} alt="" className="h-full w-full object-cover" referrerPolicy="no-referrer" />
+              </div>
+            ) : (
+              <div className="h-10 w-10 shrink-0 rounded-xl bg-gradient-to-br from-indigo-500/10 to-purple-500/15 text-theme-primary flex items-center justify-center font-black text-xs">
+                {(item.name || 'ACC').split(' ').filter(Boolean).map((n: string) => n[0]).join('').substring(0, 2).toUpperCase()}
+              </div>
+            );
+          } else if (activeTab === 'posts') {
+            subtitle = `${item.category || 'Berita'} • ${item.date || ''}`;
+            avatarDisplay = item.imageUrl ? (
+              <div className="h-10 w-10 rounded-xl overflow-hidden shrink-0 border border-theme-border/50 bg-theme-bg/40 flex items-center justify-center">
+                <img src={item.imageUrl} alt="" className="h-full w-full object-cover" referrerPolicy="no-referrer" />
+              </div>
+            ) : (
+              <div className="h-10 w-10 shrink-0 rounded-xl bg-gradient-to-br from-blue-500/10 to-cyan-500/15 text-blue-500 flex items-center justify-center font-black text-xs">
+                NEWS
+              </div>
+            );
+          } else if (activeTab === 'activities') {
+            subtitle = `${item.location || ''} • ${item.date || ''}`;
+            avatarDisplay = item.imageUrl ? (
+              <div className="h-10 w-10 rounded-xl overflow-hidden shrink-0 border border-theme-border/50 bg-theme-bg/40 flex items-center justify-center">
+                <img src={item.imageUrl} alt="" className="h-full w-full object-cover" referrerPolicy="no-referrer" />
+              </div>
+            ) : (
+              <div className="h-10 w-10 shrink-0 rounded-xl bg-gradient-to-br from-indigo-500/10 to-purple-500/15 text-theme-primary flex items-center justify-center font-black text-xs">
+                📅
+              </div>
+            );
+          } else if (activeTab === 'chapters') {
+            subtitle = `${item.memberCount || 0} Anggota`;
+            avatarDisplay = (
+              <div className="h-10 w-10 shrink-0 rounded-xl bg-gradient-to-br from-green-500/10 to-emerald-500/15 text-green-500 flex items-center justify-center font-black text-sm">
+                📍
+              </div>
+            );
+          } else if (activeTab === 'registrations') {
+            subtitle = `${item.phone || ''} • ${item.vehicleType || ''}`;
+            avatarDisplay = (
+              <div className="h-10 w-10 shrink-0 rounded-xl bg-gradient-to-br from-purple-500/10 to-indigo-500/15 text-purple-500 flex items-center justify-center font-black text-sm">
+                📝
+              </div>
+            );
+          }
+
+          return (
+            <div 
+              key={item.id}
+              onClick={() => handleEdit(item.id, item)}
+              className={`p-4 flex gap-3 items-center justify-between transition-all cursor-pointer hover:bg-theme-bg/40 group border-l-4 w-full min-w-0 overflow-hidden ${
+                editingId === item.id 
+                  ? 'bg-theme-primary/10 border-l-theme-primary' 
+                  : 'border-l-transparent'
+              }`}
+            >
+              <div className="flex items-center gap-3 flex-1 min-w-0 overflow-hidden">
+                {avatarDisplay && <div className="shrink-0">{avatarDisplay}</div>}
+                <div className="truncate flex-1 min-w-0">
+                  <p className={`font-bold truncate text-sm leading-snug transition-colors ${editingId === item.id ? 'text-theme-primary' : 'text-theme-text'}`}>
+                    {item.title || item.name}
+                  </p>
+                  {subtitle && (
+                    <p className="text-xs text-theme-muted truncate mt-1 leading-none">{subtitle}</p>
+                  )}
+                </div>
+              </div>
+              <div className="flex gap-1.5 shrink-0 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity ml-2">
+                <button 
+                  onClick={(e) => { e.stopPropagation(); handleEdit(item.id, item); }} 
+                  className="w-8 h-8 flex items-center justify-center bg-theme-primary/10 hover:bg-theme-primary text-theme-primary hover:text-white rounded-lg transition-all"
+                  title="Ubah data"
+                >
+                  <Edit2 size={13} />
+                </button>
+                <button 
+                  onClick={(e) => { e.stopPropagation(); handleDelete(item.id); }}
+                  className="w-8 h-8 flex items-center justify-center bg-theme-secondary/10 hover:bg-theme-secondary text-theme-secondary hover:text-white rounded-lg transition-all"
+                  title="Hapus data secara permanen"
+                >
+                  <Trash2 size={13} />
+                </button>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
+
+  const renderRegistrationsList = () => {
+    const filteredRegistrations = registrations.filter(reg => {
+      if (!searchTerm) return true;
+      const searchLower = searchTerm.toLowerCase();
+      return (reg.name || '').toLowerCase().includes(searchLower) ||
+             (reg.phone || '').toLowerCase().includes(searchLower) ||
+             (reg.vehicleType || '').toLowerCase().includes(searchLower) ||
+             (reg.licensePlate || '').toLowerCase().includes(searchLower) ||
+             (reg.address || '').toLowerCase().includes(searchLower);
+    });
+
+    return (
+      <div className="bg-theme-surface border border-theme-border rounded-3xl p-4 sm:p-8 shadow-xl">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 border-b border-theme-border/40 pb-5">
+          <div>
+            <h2 className="text-xl font-bold text-theme-text flex items-center gap-2">
+              <ClipboardList className="text-theme-primary" size={20} />
+              Database Pendaftar Baru
+            </h2>
+            <p className="text-xs font-semibold text-theme-muted mt-1 uppercase tracking-wider">Menampilkan {filteredRegistrations.length} dari total {registrations.length} registran</p>
+          </div>
+          
+          <div className="relative w-full sm:w-72">
+            <span className="absolute inset-y-0 left-3 flex items-center text-theme-muted pointer-events-none">
+              <Search size={16} />
+            </span>
+            <input
+              type="text"
+              placeholder="Cari nama, no telp, plat, dll..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full bg-theme-bg border border-theme-border pl-10 pr-9 py-2.5 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-theme-primary/20 focus:border-theme-primary text-theme-text"
+            />
+            {searchTerm && (
+              <button onClick={() => setSearchTerm('')} className="absolute inset-y-0 right-3 flex items-center text-theme-muted hover:text-theme-text">
+                <X size={16} />
               </button>
             )}
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filteredRegistrations.map((reg) => (
+            <div 
+              key={reg.id} 
+              className="border border-theme-border bg-theme-bg/30 hover:bg-theme-bg/60 rounded-2xl p-5 transition-all flex flex-col justify-between group shadow-sm hover:shadow-md"
+            >
+              <div>
+                <div className="flex justify-between items-start gap-2 mb-3 border-b border-theme-border/40 pb-3">
+                  <div className="min-w-0 flex-1">
+                    <h3 className="font-extrabold text-sm text-theme-text truncate leading-tight">{reg.name}</h3>
+                    <p className="text-xs font-mono text-theme-primary mt-1 font-semibold">{reg.phone}</p>
+                  </div>
+                  <button 
+                    onClick={() => handleDelete(reg.id)}
+                    className="shrink-0 text-theme-secondary hover:text-red-500 bg-theme-secondary/10 hover:bg-theme-secondary/25 p-1.5 rounded-lg transition-colors scale-90"
+                    title="Hapus pendaftar"
+                  >
+                    <Trash2 size={13} />
+                  </button>
+                </div>
+                
+                <div className="space-y-2.5 text-xs">
+                  <div>
+                    <span className="text-theme-muted font-bold block uppercase tracking-wider text-[9px]">Alamat Lengkap / Domisili</span>
+                    <p className="text-theme-text mt-0.5 line-clamp-2 leading-relaxed">{reg.address}</p>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 pt-1 border-t border-theme-border/30">
+                    <div>
+                      <span className="text-theme-muted font-bold block uppercase tracking-wider text-[9px]">Kendaraan</span>
+                      <p className="text-theme-text truncate font-semibold mt-0.5">{reg.vehicleType}</p>
+                    </div>
+                    <div>
+                      <span className="text-theme-muted font-bold block uppercase tracking-wider text-[9px]">Tahun Motor</span>
+                      <p className="text-theme-text font-semibold mt-0.5">{reg.vehicleYear}</p>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 pt-1">
+                    <div>
+                      <span className="text-theme-muted font-bold block uppercase tracking-wider text-[9px]">No. Polisi/Plat</span>
+                      <p className="text-theme-text font-mono font-semibold mt-0.5">{reg.licensePlate}</p>
+                    </div>
+                    <div>
+                      <span className="text-theme-muted font-bold block uppercase tracking-wider text-[9px]">Tanggal Masuk</span>
+                      <p className="text-theme-text font-semibold mt-0.5">{new Date(reg.createdAt).toLocaleDateString('id-ID', { month: 'short', day: 'numeric', year: '2-digit' })}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+          {filteredRegistrations.length === 0 && (
+            <div className="col-span-full py-16 text-center text-theme-muted text-sm border border-dashed border-theme-border/60 rounded-3xl bg-theme-bg/20">
+              Tidak ada pendaftar baru yang sesuai dengan kriteria pencarian Anda.
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  const tabs = [
+    { id: 'posts' as TabType, label: 'Berita', icon: FileText },
+    { id: 'activities' as TabType, label: 'Agenda', icon: Calendar },
+    { id: 'chapters' as TabType, label: 'Chapter', icon: MapPin },
+    { id: 'committee' as TabType, label: 'Pengurus', icon: Users },
+    { id: 'registrations' as TabType, label: 'Pendaftar', icon: ClipboardList },
+    { id: 'hero' as TabType, label: 'Beranda', icon: Home },
+    { id: 'about' as TabType, label: 'Tentang Kami', icon: Info },
+    { id: 'join' as TabType, label: 'Pendaftaran', icon: UserPlus },
+    { id: 'announcement' as TabType, label: 'Pengumuman', icon: Bell }
+  ];
+
+  const dataList = activeTab === 'posts' 
+    ? (posts.length > 0 ? posts : BLOG_POSTS) 
+    : activeTab === 'activities' 
+      ? (activities.length > 0 ? activities : ACTIVITIES) 
+      : activeTab === 'committee' 
+        ? (committee.length > 0 ? committee : COMMITTEE_MEMBERS) 
+        : activeTab === 'chapters'
+          ? (chapters.length > 0 ? chapters : CHAPTERS)
+          : registrations;
+
+  const filteredDataList = dataList.filter((item: any) => {
+    if (!searchTerm) return true;
+    const searchLower = searchTerm.toLowerCase();
+    const titleVal = (item.title || item.name || '').toLowerCase();
+    const subtitleVal = (item.role || item.location || item.phone || item.vehicleType || '').toLowerCase();
+    return titleVal.includes(searchLower) || subtitleVal.includes(searchLower);
+  });
+
+  const isDataEmpty = posts.length === 0 || activities.length === 0 || chapters.length === 0 || (committee?.length || 0) === 0;
+
+  return (
+    <div className="min-h-screen bg-theme-bg text-theme-text font-sans p-3 sm:p-6 md:p-8 overflow-x-hidden max-w-full">
+      <div className="max-w-6xl mx-auto w-full">
+        
+        {/* Top Header Section */}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 mb-6 pb-5 border-b border-theme-border/60">
+          <div className="flex items-center gap-3">
+            <Link to="/" className="text-theme-muted hover:text-theme-text transition-colors bg-theme-surface border border-theme-border/50 p-2 rounded-xl" title="Ke Beranda Utama">
+              <ArrowLeft size={18} />
+            </Link>
+            <div>
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-black tracking-tight text-theme-text">Dashboard Pengelola</h1>
+              <p className="text-xs text-theme-muted mt-0.5">Kelola data konten dan pendaftar Auto Claser Club</p>
+            </div>
+          </div>
+          
+          <div className="flex flex-wrap items-center gap-2 sm:self-center">
+            <button 
+              onClick={handleSeedData}
+              className="flex items-center gap-2 text-xs text-theme-primary bg-theme-primary/10 border border-theme-primary/30 px-3.5 py-2 rounded-xl font-bold transition-all hover:bg-theme-primary hover:text-white cursor-pointer shadow-sm"
+              title="SINKRON DATA: Memulihkan atau mengisi data dummy berkualitas tinggi"
+            >
+              <Database size={14} /> Sinkron Data Contoh
+            </button>
             <button 
               onClick={logout}
-              className="flex items-center gap-2 text-sm text-theme-muted hover:text-theme-text bg-theme-surface border border-theme-border px-4 py-2 rounded-md transition-colors"
+              className="flex items-center gap-2 text-xs text-theme-muted hover:text-theme-secondary hover:bg-theme-secondary/15 hover:border-theme-secondary/30 bg-theme-surface border border-theme-border/50 px-3.5 py-2 rounded-xl font-bold transition-all cursor-pointer shadow-sm"
             >
-              <LogOut size={16} /> Logout
+              <LogOut size={14} /> Keluar / Logout
             </button>
           </div>
         </div>
 
-        <div className="flex gap-4 mb-8 border-b border-theme-border pb-4 overflow-x-auto">
-          <button onClick={() => { setActiveTab('hero'); }} className={`shrink-0 whitespace-nowrap px-4 py-2 font-bold rounded-md ${activeTab === 'hero' ? 'bg-theme-primary text-white' : 'bg-theme-surface hover:bg-theme-border'}`}>Beranda</button>
-          <button onClick={() => { setActiveTab('about'); }} className={`shrink-0 whitespace-nowrap px-4 py-2 font-bold rounded-md ${activeTab === 'about' ? 'bg-theme-primary text-white' : 'bg-theme-surface hover:bg-theme-border'}`}>Tentang Kami</button>
-          <button onClick={() => { setActiveTab('join'); }} className={`shrink-0 whitespace-nowrap px-4 py-2 font-bold rounded-md ${activeTab === 'join' ? 'bg-theme-primary text-white' : 'bg-theme-surface hover:bg-theme-border'}`}>Pendaftaran</button>
-          <button onClick={() => { setActiveTab('announcement'); }} className={`shrink-0 whitespace-nowrap px-4 py-2 font-bold rounded-md ${activeTab === 'announcement' ? 'bg-theme-primary text-white' : 'bg-theme-surface hover:bg-theme-border'}`}>Pengumuman</button>
-          <button onClick={() => { setActiveTab('posts'); }} className={`shrink-0 whitespace-nowrap px-4 py-2 font-bold rounded-md ${activeTab === 'posts' ? 'bg-theme-primary text-white' : 'bg-theme-surface hover:bg-theme-border'}`}>Berita</button>
-          <button onClick={() => { setActiveTab('activities'); }} className={`shrink-0 whitespace-nowrap px-4 py-2 font-bold rounded-md ${activeTab === 'activities' ? 'bg-theme-primary text-white' : 'bg-theme-surface hover:bg-theme-border'}`}>Agenda</button>
-          <button onClick={() => { setActiveTab('chapters'); }} className={`shrink-0 whitespace-nowrap px-4 py-2 font-bold rounded-md ${activeTab === 'chapters' ? 'bg-theme-primary text-white' : 'bg-theme-surface hover:bg-theme-border'}`}>Chapter</button>
-          <button onClick={() => { setActiveTab('registrations'); }} className={`shrink-0 whitespace-nowrap px-4 py-2 font-bold rounded-md ${activeTab === 'registrations' ? 'bg-theme-primary text-white' : 'bg-theme-surface hover:bg-theme-border'}`}>Pendaftar</button>
+        {/* Custom Touch/Drag Scrolling Horizontal Navigation Bar */}
+        <div className="flex gap-2 mb-6 border-b border-theme-border/30 pb-3.5 overflow-x-auto scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden touch-pan-x w-full max-w-full">
+          {tabs.map(tab => (
+            <button 
+              key={tab.id}
+              onClick={() => { setActiveTab(tab.id); setEditingId(null); setSearchTerm(''); }} 
+              className={`flex items-center gap-2 shrink-0 whitespace-nowrap px-4 py-2.5 rounded-xl font-extrabold text-xs sm:text-sm transition-all focus:outline-none cursor-pointer ${
+                activeTab === tab.id 
+                  ? 'bg-theme-primary text-white shadow-md shadow-theme-primary/15' 
+                  : 'bg-theme-surface hover:bg-theme-border/70 text-theme-muted hover:text-theme-text border border-theme-border/30'
+              }`}
+            >
+              <tab.icon size={15} className={`${activeTab === tab.id ? 'opacity-100' : 'opacity-70'}`} />
+              <span>{tab.label}</span>
+            </button>
+          ))}
         </div>
 
-        <div className="grid md:grid-cols-3 gap-8">
-          {/* List Sidebar for List-based tabs */}
-          {['posts', 'activities', 'chapters', 'registrations'].includes(activeTab) && (
-            <div className={`md:col-span-1 space-y-4 ${editingId ? 'hidden md:block' : 'block'}`}>
-              {activeTab !== 'registrations' && (
-                <button 
-                  onClick={() => handleEdit('new', {})}
-                  className="w-full flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 py-3 rounded-xl font-bold transition-colors"
-                >
-                  <Plus size={18} /> Tambah Baru
-                </button>
-              )}
-              <div className="bg-theme-surface border border-theme-border rounded-xl max-h-[600px] overflow-y-auto w-full">
-                {dataList.map((item: any) => (
-                  <div 
-                    key={item.id} 
-                    onClick={() => activeTab !== 'registrations' && handleEdit(item.id, item)}
-                    className={`p-4 border-b border-theme-border flex justify-between items-center group transition-colors ${activeTab !== 'registrations' ? 'cursor-pointer hover:bg-theme-bg' : ''} ${editingId === item.id ? 'bg-theme-primary/10 border-l-4 border-l-theme-primary' : 'border-l-4 border-l-transparent'}`}
-                  >
-                    <div className="truncate flex-1 pr-4">
-                       <p className={`font-bold truncate text-sm ${editingId === item.id ? 'text-theme-primary' : ''}`}>{item.title || item.name}</p>
-                       {activeTab === 'registrations' && (
-                         <p className="text-xs text-theme-muted">{new Date(item.createdAt).toLocaleDateString()}</p>
-                       )}
-                    </div>
-                    <div className="flex gap-2 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity">
-                      {activeTab !== 'registrations' && (
-                        <button 
-                          onClick={(e) => { e.stopPropagation(); handleEdit(item.id, item); }} 
-                          className="p-1.5 bg-theme-primary hover:bg-theme-primary/80 rounded text-white"
-                        >
-                          <Edit2 size={14} />
-                        </button>
-                      )}
-                      <button 
-                        onClick={(e) => { e.stopPropagation(); handleDelete(item.id); }}
-                        className="p-1.5 bg-theme-secondary hover:bg-red-500 rounded text-white"
-                      >
-                        <Trash2 size={14} />
-                      </button>
-                    </div>
-                  </div>
-                ))}
-                {dataList.length === 0 && (
-                  <div className="p-8 text-center text-theme-muted text-sm">
-                    Belum ada data.
-                  </div>
-                )}
+        {/* Dashboard Dynamic Area */}
+        {['hero', 'about', 'join', 'announcement'].includes(activeTab) ? (
+          
+          /* Full Width Content Creator Settings layout */
+          <div className="bg-theme-surface border border-theme-border rounded-3xl p-4 sm:p-8 shadow-2xl">
+            <div className="flex items-center gap-2.5 mb-6 pb-3 border-b border-theme-border/40">
+              <span className="p-2 rounded-xl bg-theme-primary/10 text-theme-primary">
+                {activeTab === 'hero' && <Home size={20} />}
+                {activeTab === 'about' && <Info size={20} />}
+                {activeTab === 'join' && <UserPlus size={20} />}
+                {activeTab === 'announcement' && <Bell size={20} />}
+              </span>
+              <div>
+                <h2 className="text-lg sm:text-xl font-black text-theme-text">
+                  Pengaturan {activeTab === 'hero' ? 'Halaman Utama' : activeTab === 'about' ? 'Tentang Kami' : activeTab === 'join' ? 'Form Pendaftaran' : 'Pengumuman Penting'}
+                </h2>
+                <p className="text-xs text-theme-muted mt-0.5">Ubah isi konten yang ditampilkan statis di laman utama aplikasi</p>
               </div>
             </div>
-          )}
 
-          {/* Editor Area */}
-          <div className={`${['hero', 'about', 'join', 'announcement'].includes(activeTab) ? 'md:col-span-3' : 'md:col-span-2'} ${['posts', 'activities', 'chapters'].includes(activeTab) && !editingId ? 'hidden md:block' : 'block'}`} ref={formRef}>
-            {activeTab === 'registrations' ? (
-               <div className="bg-theme-surface border border-theme-border rounded-xl p-6 sm:p-8 max-h-[600px] overflow-y-auto">
-                 <h2 className="text-xl font-bold mb-6 text-theme-text text-center">Daftar Pendaftar (Seluruhnya)</h2>
-                 <div className="space-y-4">
-                   {registrations.map(reg => (
-                     <div key={reg.id} className="border border-theme-border rounded-lg p-6 bg-theme-bg/50">
-                       <div className="flex justify-between items-start mb-4 border-b border-theme-border pb-4">
-                         <div>
-                           <h3 className="font-bold text-lg text-theme-text">{reg.name}</h3>
-                           <p className="text-sm font-mono text-theme-primary">{reg.phone}</p>
-                         </div>
-                         <div className="text-right">
-                           <p className="text-xs text-theme-muted">Tgl. Daftar</p>
-                           <p className="text-sm font-medium">{new Date(reg.createdAt).toLocaleString()}</p>
-                         </div>
-                       </div>
-                       <div className="grid grid-cols-2 gap-4 text-sm">
-                         <div>
-                           <p className="text-theme-muted mb-1 text-xs uppercase tracking-widest">Alamat / Domisili</p>
-                           <p>{reg.address}</p>
-                         </div>
-                         <div>
-                           <p className="text-theme-muted mb-1 text-xs uppercase tracking-widest">Kendaraan</p>
-                           <p>{reg.vehicleType}</p>
-                         </div>
-                         <div>
-                           <p className="text-theme-muted mb-1 text-xs uppercase tracking-widest">Tahun Kendaraan</p>
-                           <p>{reg.vehicleYear}</p>
-                         </div>
-                         <div>
-                           <p className="text-theme-muted mb-1 text-xs uppercase tracking-widest">Nomor Polisi</p>
-                           <p>{reg.licensePlate}</p>
-                         </div>
-                       </div>
-                     </div>
-                   ))}
-                   {registrations.length === 0 && (
-                     <p className="text-center text-theme-muted">Belum ada pendaftar.</p>
-                   )}
-                 </div>
-               </div>
-            ) : editingId ? (
-              <div className="bg-theme-surface border border-theme-border rounded-xl p-6 sm:p-8">
-                <div className="flex justify-between items-center mb-6">
-                  <h2 className="text-xl font-bold text-theme-text">
-                    {['hero', 'about', 'join', 'announcement'].includes(activeTab) ? `Edit ${activeTab === 'hero' ? 'Beranda' : activeTab === 'about' ? 'Tentang Kami' : activeTab === 'join' ? 'Pendaftaran' : 'Pengumuman'}` : (editingId === 'new' ? 'Tambah' : 'Edit')} Data
-                  </h2>
-                  {!['hero', 'about', 'join', 'announcement'].includes(activeTab) && (
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+              <div className="lg:col-span-7 space-y-4">
+                {renderFormInputs()}
+              </div>
+              <div className="lg:col-span-5 sticky top-6">
+                <div className="border border-theme-border bg-theme-bg/25 rounded-2xl p-5 shadow-inner">
+                  <div className="flex items-center gap-2 mb-4 text-xs font-bold tracking-widest text-theme-primary uppercase">
+                    <span className="w-2 h-2 bg-theme-primary rounded-full animate-ping shrink-0" style={{ width: '8px', height: '8px' }}></span>
+                    👁️ Pratinjau Realtime
+                  </div>
+                  {renderLivePreview(activeTab, formData)}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3 mt-8 pt-5 border-t border-theme-border/40">
+              <button 
+                onClick={handleSave} 
+                className="bg-theme-primary hover:bg-blue-600 text-white px-6 py-2.5 rounded-xl font-bold transition-all text-sm shadow-md shadow-theme-primary/15 cursor-pointer hover:scale-[1.01]"
+              >
+                Simpan Perubahan
+              </button>
+              <button 
+                onClick={handleCancel} 
+                className="bg-theme-bg hover:bg-theme-border border border-theme-border text-theme-muted hover:text-theme-text px-6 py-2.5 rounded-xl font-bold transition-all text-sm cursor-pointer"
+              >
+                Batal / Reset
+              </button>
+            </div>
+          </div>
+
+        ) : (
+          
+          /* Collection Manager Interface (Split layout for list and editor) */
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-start w-full max-w-full min-w-0 overflow-hidden">
+            
+            {/* List Sidebar (Shows only when not editing on mobile) */}
+            <div className={`md:col-span-5 lg:col-span-4 space-y-4 w-full min-w-0 ${editingId ? 'hidden md:block' : 'block'}`}>
+              <div className="flex flex-col sm:flex-row md:flex-col gap-3 items-stretch w-full min-w-0">
+                <button 
+                  onClick={() => handleEdit('new', {})}
+                  className="w-full flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 hover:scale-[1.01] text-white py-3 px-4 rounded-xl font-extrabold text-xs transition-all shadow-md shadow-green-600/10 cursor-pointer"
+                >
+                  <Plus size={16} /> Tambah Data Baru
+                </button>
+                
+                <div className="relative flex-1">
+                  <span className="absolute inset-y-0 left-3 flex items-center text-theme-muted pointer-events-none">
+                    <Search size={15} />
+                  </span>
+                  <input
+                    type="text"
+                    placeholder={`Cari data...`}
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full bg-theme-surface border border-theme-border pl-9 pr-9 py-2.5 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-theme-primary/20 focus:border-theme-primary text-theme-text font-medium"
+                  />
+                  {searchTerm && (
                     <button 
-                      onClick={handleCancel}
-                      className="md:hidden text-theme-primary hover:text-blue-400 font-bold text-sm transition-colors"
+                      onClick={() => setSearchTerm('')}
+                      className="absolute inset-y-0 right-2 flex items-center text-theme-muted hover:text-theme-text p-1"
                     >
-                      &larr; Kembali ke Daftar
+                      <X size={15} />
                     </button>
                   )}
                 </div>
-                {renderFormInputs()}
-                <div className="flex gap-4 mt-6">
-                  <button onClick={handleSave} className="bg-theme-primary hover:bg-blue-600 text-white px-6 py-2 rounded-md font-bold transition-colors">Simpan</button>
-                  {!['hero', 'about', 'join'].includes(activeTab) && (
-                    <button onClick={handleCancel} className="bg-theme-surface hover:bg-theme-border border border-theme-border text-theme-text px-6 py-2 rounded-md font-bold transition-colors">Batal</button>
-                  )}
+              </div>
+              
+              {/* Dynamic sidebar card list */}
+              {renderSidebarList()}
+            </div>
+
+            {/* Form Editor Block (Shows on mobile only when editing/creating) */}
+            <div className={`md:col-span-7 lg:col-span-8 ${!editingId ? 'hidden md:block' : 'block'}`}>
+              {editingId ? (
+                <div className="bg-theme-surface border border-theme-border rounded-3xl p-4 sm:p-8 shadow-xl">
+                  <div className="flex items-center justify-between gap-4 mb-6 pb-4 border-b border-theme-border/40">
+                    <div>
+                      <h2 className="text-base sm:text-lg font-black text-theme-text">
+                        {editingId === 'new' ? 'Entri Data Baru' : 'Ubah Detail Konten'}
+                      </h2>
+                      <p className="text-[10px] font-black uppercase text-theme-primary tracking-widest mt-0.5">
+                        Kategori: {activeTab === 'posts' ? 'Berita' : activeTab === 'activities' ? 'Agenda Acara' : activeTab === 'chapters' ? 'Regional Chapter' : activeTab === 'registrations' ? 'Data Pendaftar' : 'Anggota Pengurus'}
+                      </p>
+                    </div>
+                    {/* prominent back button on mobile view */}
+                    <button 
+                      onClick={handleCancel}
+                      className="md:hidden flex items-center gap-1.5 text-xs font-black bg-theme-bg hover:bg-theme-border border border-theme-border px-3 py-2 rounded-xl text-theme-muted hover:text-theme-text transition-all"
+                    >
+                      <ArrowLeft size={12} /> Kembali
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                    <div className="lg:col-span-7 space-y-4">
+                      {renderFormInputs()}
+                    </div>
+                    <div className="lg:col-span-5 sticky top-6">
+                      <div className="border border-theme-border bg-theme-bg/25 rounded-2xl p-5 shadow-inner">
+                        <div className="flex items-center gap-2 mb-4 text-xs font-bold tracking-widest text-theme-primary uppercase">
+                          <span className="w-2 h-2 bg-theme-primary rounded-full animate-ping shrink-0" style={{ width: '8px', height: '8px' }}></span>
+                          👁️ Pratinjau Realtime
+                        </div>
+                        {renderLivePreview(activeTab, formData)}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-3 mt-8 pt-5 border-t border-theme-border/40">
+                    <button 
+                      onClick={handleSave} 
+                      className="bg-theme-primary hover:bg-blue-600 text-white px-6 py-2.5 rounded-xl font-bold transition-all text-sm shadow-md shadow-theme-primary/10 cursor-pointer"
+                    >
+                      Simpan Data
+                    </button>
+                    <button 
+                      onClick={handleCancel} 
+                      className="bg-theme-bg hover:bg-theme-border border border-theme-border text-theme-text px-6 py-2.5 rounded-xl font-bold transition-all text-sm cursor-pointer"
+                    >
+                      Batal
+                    </button>
+                  </div>
                 </div>
-              </div>
-            ) : (
-              <div className="h-full border-2 border-dashed border-theme-border rounded-xl flex items-center justify-center text-theme-muted p-12 text-center min-h-[400px]">
-                Pilih item dari daftar di sebelah kiri untuk mengedit atau klik "Tambah Baru".
-              </div>
-            )}
+              ) : (
+                /* Elegant desktop blank editor state */
+                <div className="border border-dashed border-theme-border bg-theme-surface/30 rounded-3xl flex flex-col items-center justify-center p-8 text-center h-[400px]">
+                  <div className="w-14 h-14 rounded-2xl bg-theme-surface border border-theme-border/60 flex items-center justify-center text-theme-muted mb-4 shadow-sm">
+                    <Edit2 size={20} className="text-theme-muted/80" />
+                  </div>
+                  <h3 className="font-extrabold text-sm text-theme-text">Tidak Ada Item Dipilih</h3>
+                  <p className="text-xs text-theme-muted max-w-xs mt-2 leading-relaxed">
+                    Silakan pilih item dari daftar di panel kiri untuk mulai mengubah informasi, atau klik tombol merah/hijau "Tambah Data Baru".
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );
 }
-

@@ -7,18 +7,23 @@ service cloud.firestore {
     function isAdmin() { 
       return request.auth != null && (request.auth.token.email == "rakhmadi.rahman90@gmail.com" || exists(/databases/$(database)/documents/admins/$(request.auth.uid))); 
     }
-    function isValidId(id) { return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); }
+    function isValidId(id) { return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_-]+$'); }
     function incoming() { return request.resource.data; }
     function existing() { return resource.data; }
 
     function isValidPost(data) {
       return data.keys().hasAll(['title', 'excerpt', 'date', 'imageUrl', 'category']) &&
-             data.keys().size() == 5 &&
              data.title is string && data.title.size() <= 200 &&
              data.excerpt is string && data.excerpt.size() <= 2000 &&
              data.date is string && data.date.size() <= 100 &&
              data.imageUrl is string && data.imageUrl.size() <= 1048000 &&
-             data.category is string && data.category.size() <= 100;
+             data.category is string && data.category.size() <= 100 &&
+             (!data.keys().contains('content') || data.content is string) &&
+             (!data.keys().contains('authorName') || data.authorName is string) &&
+             (!data.keys().contains('authorRole') || data.authorRole is string) &&
+             (!data.keys().contains('authorAvatar') || data.authorAvatar is string) &&
+             (!data.keys().contains('likes') || data.likes is number) &&
+             (!data.keys().contains('views') || data.views is number);
     }
 
     function isValidActivity(data) {
@@ -37,11 +42,28 @@ service cloud.firestore {
              data.memberCount is number;
     }
 
+    function isValidCommittee(data) {
+      return data.keys().hasAll(['name', 'role', 'description', 'imageUrl', 'displayOrder']) &&
+             data.keys().size() == 5 &&
+             data.name is string && data.name.size() <= 200 &&
+             data.role is string && data.role.size() <= 200 &&
+             data.description is string && data.description.size() <= 2000 &&
+             data.imageUrl is string && data.imageUrl.size() <= 1048000 &&
+             data.displayOrder is number;
+    }
+
     match /posts/{postId} {
       allow read: if true;
       allow create: if isAdmin() && isValidId(postId) && isValidPost(incoming());
-      allow update: if isAdmin() && isValidId(postId) && isValidPost(incoming()) && (
-        incoming().diff(existing()).affectedKeys().hasOnly(['title', 'excerpt', 'date', 'imageUrl', 'category'])
+      allow update: if (
+        isValidId(postId) && 
+        incoming().diff(existing()).affectedKeys().hasOnly(['likes', 'views']) &&
+        (!incoming().keys().contains('likes') || incoming().likes is number) &&
+        (!incoming().keys().contains('views') || incoming().views is number)
+      ) || (
+        isAdmin() && isValidId(postId) && isValidPost(incoming()) && (
+          incoming().diff(existing()).affectedKeys().hasOnly(['title', 'excerpt', 'date', 'imageUrl', 'category', 'content', 'authorName', 'authorRole', 'authorAvatar', 'likes', 'views'])
+        )
       );
       allow delete: if isAdmin() && isValidId(postId);
     }
@@ -62,6 +84,15 @@ service cloud.firestore {
         incoming().diff(existing()).affectedKeys().hasOnly(['name', 'memberCount'])
       );
       allow delete: if isAdmin() && isValidId(chapterId);
+    }
+
+    match /committee/{memberId} {
+      allow read: if true;
+      allow create: if isAdmin() && isValidId(memberId) && isValidCommittee(incoming());
+      allow update: if isAdmin() && isValidId(memberId) && isValidCommittee(incoming()) && (
+        incoming().diff(existing()).affectedKeys().hasOnly(['name', 'role', 'description', 'imageUrl', 'displayOrder'])
+      );
+      allow delete: if isAdmin() && isValidId(memberId);
     }
     
     function isValidHero(data) {

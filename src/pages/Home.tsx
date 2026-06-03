@@ -16,9 +16,14 @@ export default function Home() {
 
   useEffect(() => {
     const hash = location.hash.toLowerCase();
-    const validSections = ['#home', '#about', '#activities', '#news', '#join'];
+    const validSections = ['#home', '#about', '#sejarah', '#struktur', '#dokumen', '#activities', '#news', '#join'];
     if (validSections.includes(hash)) {
-      setActiveSection(hash.substring(1));
+      const sect = hash.substring(1);
+      if (['about', 'sejarah', 'struktur', 'dokumen'].includes(sect)) {
+        setActiveSection('about');
+      } else {
+        setActiveSection(sect);
+      }
     } else {
       setActiveSection('home');
     }
@@ -49,20 +54,22 @@ export default function Home() {
       <Navbar />
       {/* Main Content Area with transition */}
       <main ref={mainRef} className="flex-1 overflow-y-auto relative flex flex-col w-full min-h-0">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={activeSection}
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -15 }}
-            transition={{ duration: 0.3, ease: 'easeOut' }}
-            className="flex-1 flex flex-col w-full min-h-full"
-          >
-            {renderSection()}
-          </motion.div>
-        </AnimatePresence>
+        <div className="flex-1 flex flex-col w-full min-h-full">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeSection}
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -15 }}
+              transition={{ duration: 0.3, ease: 'easeOut' }}
+              className="flex-1 flex flex-col w-full min-h-full"
+            >
+              {renderSection()}
+            </motion.div>
+          </AnimatePresence>
+        </div>
+        <Footer />
       </main>
-      <Footer />
     </div>
   );
 }

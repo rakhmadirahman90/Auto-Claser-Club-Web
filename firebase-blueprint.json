@@ -34,6 +34,19 @@
         "memberCount": { "type": "number" }
       },
       "required": ["name", "memberCount"]
+    },
+    "CommitteeMember": {
+      "title": "CommitteeMember",
+      "description": "Committee Member / Pengurus",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "role": { "type": "string" },
+        "description": { "type": "string" },
+        "imageUrl": { "type": "string" },
+        "displayOrder": { "type": "number" }
+      },
+      "required": ["name", "role", "description", "imageUrl", "displayOrder"]
     }
   },
   "firestore": {
@@ -48,6 +61,10 @@
     "chapters/{chapterId}": {
       "schema": { "$ref": "Chapter" },
       "description": "Chapters"
+    },
+    "committee/{memberId}": {
+      "schema": { "$ref": "CommitteeMember" },
+      "description": "Committee / Pengurus"
     }
   }
 }

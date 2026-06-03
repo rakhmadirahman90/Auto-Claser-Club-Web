@@ -7,7 +7,7 @@ export default function Activities() {
   const { activities } = useData();
 
   return (
-    <section id="activities" className="py-8 sm:py-16 md:py-24 bg-theme-bg flex-1 flex flex-col justify-center">
+    <section id="activities" className="py-8 sm:py-16 md:py-24 bg-theme-bg flex-1 flex flex-col justify-start md:justify-center">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
         <div className="text-center mb-10 sm:mb-16">
           <span className="text-theme-primary font-bold tracking-widest uppercase text-xs sm:text-sm mb-2 block">Agenda</span>

@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { BlogPost, Activity, Chapter, HeroData, AboutData, JoinData, Registration, AnnouncementData } from '../types';
+import { BlogPost, Activity, Chapter, HeroData, AboutData, JoinData, Registration, AnnouncementData, CommitteeMember } from '../types';
 import { db, auth } from '../firebase';
+import { BLOG_POSTS } from '../data';
 import { 
   collection, query, onSnapshot, doc, setDoc, updateDoc, deleteDoc, 
   getDocFromServer, addDoc
@@ -36,9 +37,12 @@ interface DataContextType {
   joinData: JoinData | null;
   announcementData: AnnouncementData | null;
   registrations: Registration[];
+  committee: CommitteeMember[];
   addPost: (post: BlogPost) => Promise<void>;
   updatePost: (id: string, post: BlogPost) => Promise<void>;
   deletePost: (id: string) => Promise<void>;
+  likePost: (id: string) => Promise<void>;
+  viewPost: (id: string) => Promise<void>;
   addActivity: (activity: Activity) => Promise<void>;
   updateActivity: (id: string, activity: Activity) => Promise<void>;
   deleteActivity: (id: string) => Promise<void>;
@@ -50,7 +54,11 @@ interface DataContextType {
   updateJoin: (join: JoinData) => Promise<void>;
   updateAnnouncement: (announcement: AnnouncementData) => Promise<void>;
   addRegistration: (reg: Omit<Registration, 'id'>) => Promise<void>;
+  updateRegistration: (id: string, reg: Registration) => Promise<void>;
   deleteRegistration: (id: string) => Promise<void>;
+  addCommitteeMember: (member: CommitteeMember) => Promise<void>;
+  updateCommitteeMember: (id: string, member: CommitteeMember) => Promise<void>;
+  deleteCommitteeMember: (id: string) => Promise<void>;
 }
 
 const DataContext = createContext<DataContextType | null>(null);
@@ -71,6 +79,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [joinData, setJoinData] = useState<JoinData | null>(null);
   const [announcementData, setAnnouncementData] = useState<AnnouncementData | null>(null);
   const [registrations, setRegistrations] = useState<Registration[]>([]);
+  const [committee, setCommittee] = useState<CommitteeMember[]>([]);
 
   useEffect(() => {
     const unsubAuth = onAuthStateChanged(auth, u => setUser(u));
@@ -85,7 +94,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
 
     let unsubReg = () => {};
-    if (user) {
+    if (user && user.email === "rakhmadi.rahman90@gmail.com") {
       unsubReg = onSnapshot(collection(db, 'registrations'), snap => {
         setRegistrations(snap.docs.map(d => ({ id: d.id, ...d.data() } as Registration)));
       }, err => handleFirestoreError(err, OperationType.LIST, 'registrations'));
@@ -123,18 +132,23 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       else setAnnouncementData(null);
     }, err => handleFirestoreError(err, OperationType.LIST, 'announcement'));
 
-    return () => { unsubPosts(); unsubActivities(); unsubChapters(); unsubHero(); unsubAbout(); unsubJoin(); unsubAnnouncement(); unsubReg(); };
+    const unsubCommittee = onSnapshot(query(collection(db, 'committee')), snap => {
+      const list = snap.docs.map(d => ({ id: d.id, ...d.data() } as CommitteeMember));
+      setCommittee(list.sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0)));
+    }, err => handleFirestoreError(err, OperationType.LIST, 'committee'));
+
+    return () => { unsubPosts(); unsubActivities(); unsubChapters(); unsubHero(); unsubAbout(); unsubJoin(); unsubAnnouncement(); unsubReg(); unsubCommittee(); };
   }, [user]);
 
   const addPost = async (post: BlogPost) => {
     const { id, ...data } = post;
-    const docId = Date.now().toString() + Math.random().toString(36).substring(2, 9);
+    const docId = id && id !== 'new' ? id : (Date.now().toString() + Math.random().toString(36).substring(2, 9));
     try { await setDoc(doc(db, 'posts', docId), data); } 
     catch (err) { handleFirestoreError(err, OperationType.CREATE, `posts/${docId}`); }
   };
   const updatePost = async (id: string, post: BlogPost) => {
     const { id: _, ...data } = post;
-    try { await updateDoc(doc(db, 'posts', id), data); } 
+    try { await setDoc(doc(db, 'posts', id), data); } 
     catch (err) { handleFirestoreError(err, OperationType.UPDATE, `posts/${id}`); }
   };
   const deletePost = async (id: string) => {
@@ -142,15 +156,61 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     catch (err) { handleFirestoreError(err, OperationType.DELETE, `posts/${id}`); }
   };
 
+  const likePost = async (id: string) => {
+    try {
+      const postRef = doc(db, 'posts', id);
+      const postSnap = await getDocFromServer(postRef).catch(() => null);
+      if (postSnap && postSnap.exists()) {
+        const currentLikes = postSnap.data().likes || 0;
+        await updateDoc(postRef, { likes: currentLikes + 1 });
+      } else {
+        const fallback = BLOG_POSTS.find(p => p.id === id);
+        const currentLikes = fallback?.likes || 0;
+        const isAdminUser = auth.currentUser?.email === "rakhmadi.rahman90@gmail.com";
+        if (isAdminUser && fallback) {
+          const { id: _, ...fallbackData } = fallback;
+          await setDoc(postRef, { ...fallbackData, likes: currentLikes + 1 });
+        } else {
+          console.warn(`Post ${id} does not exist in Firestore and cannot be liked by a non-admin user.`);
+        }
+      }
+    } catch (err) {
+      console.error(`Error liking post ${id}:`, err);
+    }
+  };
+
+  const viewPost = async (id: string) => {
+    try {
+      const postRef = doc(db, 'posts', id);
+      const postSnap = await getDocFromServer(postRef).catch(() => null);
+      if (postSnap && postSnap.exists()) {
+        const currentViews = postSnap.data().views || 0;
+        await updateDoc(postRef, { views: currentViews + 1 });
+      } else {
+        const fallback = BLOG_POSTS.find(p => p.id === id);
+        const currentViews = fallback?.views || 0;
+        const isAdminUser = auth.currentUser?.email === "rakhmadi.rahman90@gmail.com";
+        if (isAdminUser && fallback) {
+          const { id: _, ...fallbackData } = fallback;
+          await setDoc(postRef, { ...fallbackData, views: currentViews + 1 });
+        } else {
+          console.warn(`Post ${id} does not exist in Firestore and cannot be viewed by a non-admin user.`);
+        }
+      }
+    } catch (err) {
+      console.error(`Error viewing post ${id}:`, err);
+    }
+  };
+
   const addActivity = async (activity: Activity) => {
     const { id, ...data } = activity;
-    const docId = Date.now().toString() + Math.random().toString(36).substring(2, 9);
+    const docId = id && id !== 'new' ? id : (Date.now().toString() + Math.random().toString(36).substring(2, 9));
     try { await setDoc(doc(db, 'activities', docId), data); } 
     catch (err) { handleFirestoreError(err, OperationType.CREATE, `activities/${docId}`); }
   };
   const updateActivity = async (id: string, activity: Activity) => {
     const { id: _, ...data } = activity;
-    try { await updateDoc(doc(db, 'activities', id), data); } 
+    try { await setDoc(doc(db, 'activities', id), data); } 
     catch (err) { handleFirestoreError(err, OperationType.UPDATE, `activities/${id}`); }
   };
   const deleteActivity = async (id: string) => {
@@ -160,13 +220,13 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const addChapter = async (chapter: Chapter) => {
     const { id, ...data } = chapter;
-    const docId = Date.now().toString() + Math.random().toString(36).substring(2, 9);
+    const docId = id && id !== 'new' ? id : (Date.now().toString() + Math.random().toString(36).substring(2, 9));
     try { await setDoc(doc(db, 'chapters', docId), data); } 
     catch (err) { handleFirestoreError(err, OperationType.CREATE, `chapters/${docId}`); }
   };
   const updateChapter = async (id: string, chapter: Chapter) => {
     const { id: _, ...data } = chapter;
-    try { await updateDoc(doc(db, 'chapters', id), data); } 
+    try { await setDoc(doc(db, 'chapters', id), data); } 
     catch (err) { handleFirestoreError(err, OperationType.UPDATE, `chapters/${id}`); }
   };
   const deleteChapter = async (id: string) => {
@@ -203,19 +263,44 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     catch (err) { handleFirestoreError(err, OperationType.WRITE, 'registrations'); throw err; }
   };
 
+  const updateRegistration = async (id: string, reg: Registration) => {
+    const { id: _, ...data } = reg;
+    try { await setDoc(doc(db, 'registrations', id), data); }
+    catch (err) { handleFirestoreError(err, OperationType.UPDATE, `registrations/${id}`); }
+  };
+
   const deleteRegistration = async (id: string) => {
     try { await deleteDoc(doc(db, 'registrations', id)); }
     catch (err) { handleFirestoreError(err, OperationType.DELETE, `registrations/${id}`); }
   };
 
+  const addCommitteeMember = async (member: CommitteeMember) => {
+    const { id, ...data } = member;
+    const docId = id && id !== 'new' ? id : (Date.now().toString() + Math.random().toString(36).substring(2, 9));
+    try { await setDoc(doc(db, 'committee', docId), data); }
+    catch (err) { handleFirestoreError(err, OperationType.CREATE, `committee/${docId}`); }
+  };
+
+  const updateCommitteeMember = async (id: string, member: CommitteeMember) => {
+    const { id: _, ...data } = member;
+    try { await setDoc(doc(db, 'committee', id), data); }
+    catch (err) { handleFirestoreError(err, OperationType.UPDATE, `committee/${id}`); }
+  };
+
+  const deleteCommitteeMember = async (id: string) => {
+    try { await deleteDoc(doc(db, 'committee', id)); }
+    catch (err) { handleFirestoreError(err, OperationType.DELETE, `committee/${id}`); }
+  };
+
   return (
     <DataContext.Provider value={{
-      user, posts, activities, chapters, heroData, aboutData, joinData, announcementData, registrations,
-      addPost, updatePost, deletePost,
+      user, posts, activities, chapters, heroData, aboutData, joinData, announcementData, registrations, committee,
+      addPost, updatePost, deletePost, likePost, viewPost,
       addActivity, updateActivity, deleteActivity,
       addChapter, updateChapter, deleteChapter,
       updateHero, updateAbout, updateJoin, updateAnnouncement,
-      addRegistration, deleteRegistration
+      addRegistration, updateRegistration, deleteRegistration,
+      addCommitteeMember, updateCommitteeMember, deleteCommitteeMember
     }}>
       {children}
     </DataContext.Provider>

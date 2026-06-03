@@ -20,7 +20,16 @@ export default function Join() {
 
   const title = joinData?.title || 'Bergabung Bersama Kami';
   const description = joinData?.description || 'Isi formulir pendaftaran di bawah ini untuk menjadi bagian dari keluarga besar Auto Claser Club. Admin kami akan segera memproses pendaftaran Anda.';
-  const adminWhatsApp = joinData?.adminWhatsApp || '6281234567890';
+  
+  // Sanitizing the WhatsApp number input to properly clean spaces, non-digits, and leading zeros
+  const rawAdminWA = joinData?.adminWhatsApp || '6289616746342';
+  let adminWhatsApp = rawAdminWA.trim().replace(/\D/g, '');
+  if (adminWhatsApp.startsWith('0')) {
+    adminWhatsApp = '62' + adminWhatsApp.substring(1);
+  } else if (adminWhatsApp === '') {
+    adminWhatsApp = '6289616746342';
+  }
+
   const imgUrl = (joinData?.imageUrl && joinData.imageUrl.trim() !== '') 
     ? joinData.imageUrl 
     : 'https://images.unsplash.com/photo-1503370321287-320dcf7366d4?auto=format&fit=crop&q=80&w=1000';
@@ -81,7 +90,7 @@ export default function Join() {
   };
 
   return (
-    <section id="join" className="py-8 sm:py-16 md:py-24 bg-theme-bg relative overflow-hidden flex-1 flex flex-col justify-center">
+    <section id="join" className="py-8 sm:py-16 md:py-24 bg-theme-bg relative flex-1 flex flex-col justify-start md:justify-center">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
         <div className="grid md:grid-cols-2 gap-8 lg:gap-12 items-center">
           

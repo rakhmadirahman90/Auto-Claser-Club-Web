@@ -5,6 +5,12 @@ export interface BlogPost {
   date: string;
   imageUrl: string;
   category: string;
+  content?: string;
+  authorName?: string;
+  authorRole?: string;
+  authorAvatar?: string;
+  likes?: number;
+  views?: number;
 }
 
 export interface Activity {
@@ -64,4 +70,14 @@ export interface AnnouncementData {
   content: string;
   imageUrl?: string;
 }
+
+export interface CommitteeMember {
+  id: string;
+  name: string;
+  role: string;
+  description: string;
+  imageUrl: string;
+  displayOrder: number;
+}
+
 

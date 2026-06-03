@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Menu, X, User as UserIcon } from 'lucide-react';
+import { Menu, X, User as UserIcon, ChevronDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Link, useLocation } from 'react-router-dom';
 import { useData } from '../context/DataContext';
@@ -25,16 +25,27 @@ export default function Navbar() {
 
   const navLinks = [
     { name: 'Beranda', href: '#home' },
-    { name: 'Profil', href: '#about' },
+    { 
+      name: 'Profil', 
+      href: '#about',
+      submenu: [
+        { name: 'Tentang', href: '#about' },
+        { name: 'Sejarah', href: '#sejarah' },
+        { name: 'Struktur', href: '#struktur' },
+        { name: 'Dokumen Resmi', href: '#dokumen' },
+      ]
+    },
     { name: 'Agenda', href: '#activities' },
     { name: 'Berita', href: '#news' },
     { name: 'Pendaftaran', href: '#join' },
   ];
 
   const activeHash = location.hash || '#home';
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   const handleScrollToSegment = () => {
     setIsOpen(false);
+    setIsDropdownOpen(false);
   };
 
   return (
@@ -58,13 +69,66 @@ export default function Navbar() {
           {/* Desktop Menu */}
           <div className="hidden md:flex space-x-8 items-center">
             {navLinks.map((link) => {
+              if (link.submenu) {
+                const isSubActive = link.submenu.some(sub => sub.href === activeHash);
+                return (
+                  <div
+                    key={link.name}
+                    className="relative"
+                    onMouseEnter={() => setIsDropdownOpen(true)}
+                    onMouseLeave={() => setIsDropdownOpen(false)}
+                  >
+                    <button
+                      className={`font-semibold transition-colors text-sm tracking-wide relative py-2 flex items-center gap-1 focus:outline-none cursor-pointer ${
+                        isSubActive ? 'text-theme-primary' : 'text-theme-muted hover:text-theme-text'
+                      }`}
+                    >
+                      {link.name}
+                      <ChevronDown size={14} className={`transition-transform duration-200 ${isDropdownOpen ? 'rotate-180 text-theme-primary' : 'text-theme-muted'}`} />
+                      <span className={`absolute -bottom-1 left-0 h-0.5 bg-theme-secondary transition-all ${
+                        isSubActive ? 'w-full' : 'w-0'
+                      }`}></span>
+                    </button>
+                    
+                    <AnimatePresence>
+                      {isDropdownOpen && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 8, scale: 0.95 }}
+                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                          exit={{ opacity: 0, y: 8, scale: 0.95 }}
+                          transition={{ duration: 0.15 }}
+                          className="absolute left-1/2 -translate-x-1/2 mt-2 w-44 bg-theme-surface/95 border border-theme-border rounded-xl shadow-2xl py-2 z-50 backdrop-blur-md"
+                        >
+                          {link.submenu.map((sub) => {
+                            const isSpecificActive = sub.href === activeHash;
+                            return (
+                              <Link
+                                key={sub.name}
+                                to={`/${sub.href}`}
+                                onClick={handleScrollToSegment}
+                                className={`block px-4 py-2.5 text-sm font-medium transition-all hover:bg-theme-bg rounded-lg mx-1 ${
+                                  isSpecificActive 
+                                    ? 'text-theme-primary bg-theme-bg/50' 
+                                    : 'text-theme-muted hover:text-theme-text'
+                                }`}
+                              >
+                                {sub.name}
+                              </Link>
+                            );
+                          })}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                );
+              }
               const isActive = link.href === activeHash || (link.href === '#home' && activeHash === '');
               return (
                 <Link
                   key={link.name}
                   to={`/${link.href}`}
                   onClick={handleScrollToSegment}
-                  className={`font-medium transition-colors text-sm uppercase tracking-wider relative group py-2 ${
+                  className={`font-medium transition-colors text-sm tracking-wide relative group py-2 ${
                     isActive ? 'text-theme-primary' : 'text-theme-muted hover:text-theme-text'
                   }`}
                 >
@@ -79,7 +143,7 @@ export default function Navbar() {
             {/* Login Admin Menu */}
             <Link
               to="/admin"
-              className="font-medium transition-colors text-sm uppercase tracking-wider relative group py-2 text-theme-muted hover:text-theme-text flex items-center gap-1.5 border-l border-theme-border pl-6"
+              className="font-medium transition-colors text-sm tracking-wide relative group py-2 text-theme-muted hover:text-theme-text flex items-center gap-1.5 border-l border-theme-border pl-6"
             >
               <UserIcon size={16} />
               {user ? 'Panel Admin' : 'Login Admin'}
@@ -109,6 +173,30 @@ export default function Navbar() {
           >
             <div className="px-4 pt-2 pb-6 space-y-1 block">
               {navLinks.map((link) => {
+                if (link.submenu) {
+                  return (
+                    <div key={link.name} className="space-y-1">
+                      <div className="px-3 pt-3 pb-1 text-xs font-bold tracking-wider text-theme-primary mb-1">
+                        {link.name}
+                      </div>
+                      {link.submenu.map((sub) => {
+                        const isSubActive = sub.href === activeHash;
+                        return (
+                          <Link
+                            key={sub.name}
+                            to={`/${sub.href}`}
+                            className={`block pl-6 pr-3 py-2 text-sm font-semibold rounded-md transition-colors ${
+                              isSubActive ? 'text-theme-secondary bg-theme-surface/50 font-bold' : 'text-theme-muted hover:text-theme-text hover:bg-theme-surface/30'
+                            }`}
+                            onClick={handleScrollToSegment}
+                          >
+                            • {sub.name}
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  );
+                }
                 const isActive = link.href === activeHash || (link.href === '#home' && activeHash === '');
                 return (
                   <Link
