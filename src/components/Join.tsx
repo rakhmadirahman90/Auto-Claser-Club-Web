@@ -21,7 +21,9 @@ export default function Join() {
   const title = joinData?.title || 'Bergabung Bersama Kami';
   const description = joinData?.description || 'Isi formulir pendaftaran di bawah ini untuk menjadi bagian dari keluarga besar Auto Claser Club. Admin kami akan segera memproses pendaftaran Anda.';
   const adminWhatsApp = joinData?.adminWhatsApp || '6281234567890';
-  const imgUrl = joinData?.imageUrl || 'https://images.unsplash.com/photo-1503370321287-320dcf7366d4?auto=format&fit=crop&q=80&w=1000';
+  const imgUrl = (joinData?.imageUrl && joinData.imageUrl.trim() !== '') 
+    ? joinData.imageUrl 
+    : 'https://images.unsplash.com/photo-1503370321287-320dcf7366d4?auto=format&fit=crop&q=80&w=1000';
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -79,51 +81,50 @@ export default function Join() {
   };
 
   return (
-    <section id="join" className="py-24 bg-theme-bg relative overflow-hidden">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid md:grid-cols-2 gap-12 items-center">
+    <section id="join" className="py-8 sm:py-16 md:py-24 bg-theme-bg relative overflow-hidden flex-1 flex flex-col justify-center">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+        <div className="grid md:grid-cols-2 gap-8 lg:gap-12 items-center">
           
           <motion.div 
-            initial={{ opacity: 0, x: -50 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8 }}
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
             className="order-2 md:order-1"
           >
-            <div className="bg-theme-surface border border-theme-border rounded-2xl p-8 shadow-xl">
-              <h3 className="text-2xl font-bold text-theme-text mb-6">Formulir Pendaftaran</h3>
-              <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="bg-theme-surface border border-theme-border rounded-2xl p-6 sm:p-8 shadow-xl">
+              <h3 className="text-xl sm:text-2xl font-bold text-theme-text mb-4 sm:mb-6">Formulir Pendaftaran</h3>
+              <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
                 <div>
-                  <label htmlFor="name" className="block text-sm font-medium text-theme-muted mb-1">Nama Lengkap</label>
-                  <input required type="text" id="name" name="name" value={formData.name} onChange={handleChange} className="w-full bg-theme-bg border border-theme-border rounded-lg px-4 py-3 text-theme-text focus:outline-none focus:border-theme-primary transition-colors" placeholder="Masukkan nama lengkap Anda" />
+                  <label htmlFor="name" className="block text-xs sm:text-sm font-medium text-theme-muted mb-1">Nama Lengkap</label>
+                  <input required type="text" id="name" name="name" value={formData.name} onChange={handleChange} className="w-full bg-theme-bg border border-theme-border rounded-lg px-3 py-2 sm:px-4 sm:py-3 text-sm text-theme-text focus:outline-none focus:border-theme-primary transition-colors" placeholder="Masukkan nama lengkap Anda" />
                 </div>
                 <div>
-                  <label htmlFor="phone" className="block text-sm font-medium text-theme-muted mb-1">No. WhatsApp</label>
-                  <input required type="text" id="phone" name="phone" value={formData.phone} onChange={handleChange} className="w-full bg-theme-bg border border-theme-border rounded-lg px-4 py-3 text-theme-text focus:outline-none focus:border-theme-primary transition-colors" placeholder="contoh: 081234567890" />
+                  <label htmlFor="phone" className="block text-xs sm:text-sm font-medium text-theme-muted mb-1">No. WhatsApp</label>
+                  <input required type="text" id="phone" name="phone" value={formData.phone} onChange={handleChange} className="w-full bg-theme-bg border border-theme-border rounded-lg px-3 py-2 sm:px-4 sm:py-3 text-sm text-theme-text focus:outline-none focus:border-theme-primary transition-colors" placeholder="contoh: 081234567890" />
                 </div>
                 <div>
-                  <label htmlFor="address" className="block text-sm font-medium text-theme-muted mb-1">Alamat / Domisili</label>
-                  <textarea required id="address" name="address" value={formData.address} onChange={handleChange} rows={3} className="w-full bg-theme-bg border border-theme-border rounded-lg px-4 py-3 text-theme-text focus:outline-none focus:border-theme-primary transition-colors resize-none" placeholder="Masukkan alamat lengkap atau kota domisili" />
+                  <label htmlFor="address" className="block text-xs sm:text-sm font-medium text-theme-muted mb-1">Alamat / Domisili</label>
+                  <textarea required id="address" name="address" value={formData.address} onChange={handleChange} rows={2} className="w-full bg-theme-bg border border-theme-border rounded-lg px-3 py-2 sm:px-4 sm:py-3 text-sm text-theme-text focus:outline-none focus:border-theme-primary transition-colors resize-none" placeholder="Masukkan alamat lengkap atau kota domisili" />
                 </div>
                 <div>
-                  <label htmlFor="vehicleType" className="block text-sm font-medium text-theme-muted mb-1">Model / Varian Kendaraan</label>
-                  <input required type="text" id="vehicleType" name="vehicleType" value={formData.vehicleType} onChange={handleChange} className="w-full bg-theme-bg border border-theme-border rounded-lg px-4 py-3 text-theme-text focus:outline-none focus:border-theme-primary transition-colors" placeholder="contoh: Honda Civic FD1" />
+                  <label htmlFor="vehicleType" className="block text-xs sm:text-sm font-medium text-theme-muted mb-1">Model / Varian Kendaraan</label>
+                  <input required type="text" id="vehicleType" name="vehicleType" value={formData.vehicleType} onChange={handleChange} className="w-full bg-theme-bg border border-theme-border rounded-lg px-3 py-2 sm:px-4 sm:py-3 text-sm text-theme-text focus:outline-none focus:border-theme-primary transition-colors" placeholder="contoh: Honda Civic FD1" />
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-3 sm:gap-4">
                   <div>
-                    <label htmlFor="vehicleYear" className="block text-sm font-medium text-theme-muted mb-1">Tahun Kendaraan</label>
-                    <input required type="text" id="vehicleYear" name="vehicleYear" value={formData.vehicleYear} onChange={handleChange} className="w-full bg-theme-bg border border-theme-border rounded-lg px-4 py-3 text-theme-text focus:outline-none focus:border-theme-primary transition-colors" placeholder="contoh: 2010" />
+                    <label htmlFor="vehicleYear" className="block text-xs sm:text-sm font-medium text-theme-muted mb-1">Tahun</label>
+                    <input required type="text" id="vehicleYear" name="vehicleYear" value={formData.vehicleYear} onChange={handleChange} className="w-full bg-theme-bg border border-theme-border rounded-lg px-3 py-2 sm:px-4 sm:py-3 text-sm text-theme-text focus:outline-none focus:border-theme-primary transition-colors" placeholder="contoh: 2010" />
                   </div>
                   <div>
-                    <label htmlFor="licensePlate" className="block text-sm font-medium text-theme-muted mb-1">Nomor Polisi</label>
-                    <input required type="text" id="licensePlate" name="licensePlate" value={formData.licensePlate} onChange={handleChange} className="w-full bg-theme-bg border border-theme-border rounded-lg px-4 py-3 text-theme-text focus:outline-none focus:border-theme-primary transition-colors" placeholder="contoh: B 1234 ABC" />
+                    <label htmlFor="licensePlate" className="block text-xs sm:text-sm font-medium text-theme-muted mb-1">Nomor Polisi</label>
+                    <input required type="text" id="licensePlate" name="licensePlate" value={formData.licensePlate} onChange={handleChange} className="w-full bg-theme-bg border border-theme-border rounded-lg px-3 py-2 sm:px-4 sm:py-3 text-sm text-theme-text focus:outline-none focus:border-theme-primary transition-colors" placeholder="B 1234 ABC" />
                   </div>
                 </div>
                 
-                <button disabled={isSubmitting} type="submit" className="w-full bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white font-bold py-4 rounded-xl mt-6 flex items-center justify-center gap-2 transition-all transform hover:scale-[1.02]">
-                  <Send size={20} /> {isSubmitting ? 'Mengirim...' : 'Kirim via WhatsApp'}
+                <button disabled={isSubmitting} type="submit" className="w-full bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white font-bold py-3 sm:py-4 rounded-xl mt-4 sm:mt-6 flex items-center justify-center gap-2 transition-all transform hover:scale-[1.02] text-sm sm:text-base">
+                  <Send size={18} /> {isSubmitting ? 'Mengirim...' : 'Kirim via WhatsApp'}
                 </button>
-                <p className="text-xs text-center text-theme-muted mt-4">
+                <p className="text-[10px] sm:text-xs text-center text-theme-muted mt-3">
                   Data Anda aman bersama kami. Setelah klik kirim, Anda akan diarahkan ke WhatsApp Admin.
                 </p>
               </form>
@@ -131,17 +132,16 @@ export default function Join() {
           </motion.div>
 
           <motion.div 
-            initial={{ opacity: 0, x: 50 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8 }}
-            className="order-1 md:order-2 space-y-6"
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.15 }}
+            className="order-1 md:order-2 space-y-4 sm:space-y-6"
           >
-            <h2 className="text-4xl md:text-5xl font-bold text-theme-text leading-tight">
+            <h2 className="text-2xl sm:text-4xl md:text-5xl font-bold text-theme-text leading-tight">
               {title}
             </h2>
-            <div className="h-1 w-20 bg-theme-primary rounded-full" />
-            <p className="text-lg text-theme-muted leading-relaxed">
+            <div className="h-1 w-16 sm:w-20 bg-theme-primary rounded-full" />
+            <p className="text-sm sm:text-base md:text-lg text-theme-muted leading-relaxed">
               {description}
             </p>
             <div className="rounded-2xl overflow-hidden aspect-video shadow-2xl relative">

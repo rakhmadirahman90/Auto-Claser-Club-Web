@@ -1,17 +1,26 @@
 import React, { useState, useEffect } from 'react';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, User as UserIcon } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { Link, useLocation } from 'react-router-dom';
+import { useData } from '../context/DataContext';
 
 export default function Navbar() {
+  const { user } = useData();
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const location = useLocation();
 
   useEffect(() => {
+    const mainEl = document.querySelector('main');
+    if (!mainEl) return;
+
     const handleScroll = () => {
-      setScrolled(window.scrollY > 20);
+      setScrolled(mainEl.scrollTop > 20);
     };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+
+    handleScroll();
+    mainEl.addEventListener('scroll', handleScroll);
+    return () => mainEl.removeEventListener('scroll', handleScroll);
   }, []);
 
   const navLinks = [
@@ -22,36 +31,59 @@ export default function Navbar() {
     { name: 'Pendaftaran', href: '#join' },
   ];
 
+  const activeHash = location.hash || '#home';
+
+  const handleScrollToSegment = () => {
+    setIsOpen(false);
+  };
+
   return (
     <nav
-      className={`fixed w-full z-50 transition-all duration-300 border-b ${
+      className={`sticky top-0 w-full z-50 transition-all duration-300 border-b ${
         scrolled ? 'bg-theme-bg/95 backdrop-blur-md border-theme-border' : 'bg-theme-bg border-transparent'
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-20">
+        <div className="flex justify-between items-center h-16 sm:h-20">
           <div className="flex-shrink-0 flex items-center">
-            <a href="#home" className="flex items-center gap-3">
+            <Link to="/#home" onClick={handleScrollToSegment} className="flex items-center gap-3">
               <img src="/logo.jpg" alt="ACC Logo" className="h-12 w-auto object-contain" />
-              <div className="hidden sm:block leading-none border-l-2 border-theme-border pl-3">
-                <span className="block text-sm font-bold text-theme-primary">Auto Claser</span>
-                <span className="block text-sm font-bold text-theme-secondary">Club</span>
+              <div className="leading-none border-l-2 border-theme-border pl-3">
+                <span className="block text-xs sm:text-sm font-bold text-theme-primary">Auto Claser</span>
+                <span className="block text-xs sm:text-sm font-bold text-theme-secondary">Club</span>
               </div>
-            </a>
+            </Link>
           </div>
 
           {/* Desktop Menu */}
-          <div className="hidden md:flex space-x-8">
-            {navLinks.map((link) => (
-              <a
-                key={link.name}
-                href={link.href}
-                className="text-theme-muted hover:text-theme-text font-medium transition-colors text-sm uppercase tracking-wider relative group"
-              >
-                {link.name}
-                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-theme-secondary transition-all group-hover:w-full"></span>
-              </a>
-            ))}
+          <div className="hidden md:flex space-x-8 items-center">
+            {navLinks.map((link) => {
+              const isActive = link.href === activeHash || (link.href === '#home' && activeHash === '');
+              return (
+                <Link
+                  key={link.name}
+                  to={`/${link.href}`}
+                  onClick={handleScrollToSegment}
+                  className={`font-medium transition-colors text-sm uppercase tracking-wider relative group py-2 ${
+                    isActive ? 'text-theme-primary' : 'text-theme-muted hover:text-theme-text'
+                  }`}
+                >
+                  {link.name}
+                  <span className={`absolute -bottom-1 left-0 h-0.5 bg-theme-secondary transition-all ${
+                    isActive ? 'w-full' : 'w-0 group-hover:w-full'
+                  }`}></span>
+                </Link>
+              );
+            })}
+            
+            {/* Login Admin Menu */}
+            <Link
+              to="/admin"
+              className="font-medium transition-colors text-sm uppercase tracking-wider relative group py-2 text-theme-muted hover:text-theme-text flex items-center gap-1.5 border-l border-theme-border pl-6"
+            >
+              <UserIcon size={16} />
+              {user ? 'Panel Admin' : 'Login Admin'}
+            </Link>
           </div>
 
           {/* Mobile Menu Button */}
@@ -75,17 +107,32 @@ export default function Navbar() {
             exit={{ opacity: 0, height: 0 }}
             className="md:hidden bg-theme-bg/95 border-b border-theme-border overflow-hidden"
           >
-            <div className="px-4 pt-2 pb-6 space-y-1">
-              {navLinks.map((link) => (
-                <a
-                  key={link.name}
-                  href={link.href}
-                  className="block px-3 py-3 text-base font-medium text-theme-muted hover:text-theme-text hover:bg-theme-surface rounded-md"
-                  onClick={() => setIsOpen(false)}
-                >
-                  {link.name}
-                </a>
-              ))}
+            <div className="px-4 pt-2 pb-6 space-y-1 block">
+              {navLinks.map((link) => {
+                const isActive = link.href === activeHash || (link.href === '#home' && activeHash === '');
+                return (
+                  <Link
+                    key={link.name}
+                    to={`/${link.href}`}
+                    className={`block px-3 py-3 text-base font-medium rounded-md transition-colors ${
+                      isActive ? 'text-theme-primary bg-theme-surface' : 'text-theme-muted hover:text-theme-text hover:bg-theme-surface'
+                    }`}
+                    onClick={handleScrollToSegment}
+                  >
+                    {link.name}
+                  </Link>
+                );
+              })}
+              
+              {/* Login Admin Menu Mobile */}
+              <Link
+                to="/admin"
+                onClick={() => setIsOpen(false)}
+                className="block px-3 py-3 text-base font-medium text-theme-muted hover:text-theme-text hover:bg-theme-surface rounded-md flex items-center gap-2 border-t border-theme-border mt-2 pt-3"
+              >
+                <UserIcon size={18} />
+                {user ? 'Panel Admin' : 'Login Admin'}
+              </Link>
             </div>
           </motion.div>
         )}

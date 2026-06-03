@@ -7,24 +7,23 @@ export default function Activities() {
   const { activities } = useData();
 
   return (
-    <section id="activities" className="py-24 bg-theme-bg">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-16">
-          <span className="text-theme-primary font-bold tracking-widest uppercase text-sm mb-2 block">Agenda</span>
-          <h2 className="text-3xl md:text-5xl font-bold text-theme-text mb-6">
+    <section id="activities" className="py-8 sm:py-16 md:py-24 bg-theme-bg flex-1 flex flex-col justify-center">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+        <div className="text-center mb-10 sm:mb-16">
+          <span className="text-theme-primary font-bold tracking-widest uppercase text-xs sm:text-sm mb-2 block">Agenda</span>
+          <h2 className="text-2xl sm:text-4xl md:text-5xl font-bold text-theme-text mb-4 sm:mb-6">
             Kegiatan <span className="text-theme-secondary">Mendatang</span>
           </h2>
-          <div className="h-1 w-20 bg-theme-secondary rounded-full mx-auto" />
+          <div className="h-1 w-16 sm:w-20 bg-theme-secondary rounded-full mx-auto" />
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
           {activities.map((activity, index) => (
             <motion.div
               key={activity.id}
               initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: index * 0.1 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: index * 0.08 }}
               className="bg-theme-surface/50 rounded-2xl overflow-hidden border border-theme-border hover:border-theme-primary transition-colors group cursor-pointer"
             >
               <div className="relative h-48 overflow-hidden">

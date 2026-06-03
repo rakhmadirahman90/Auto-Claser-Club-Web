@@ -330,7 +330,7 @@ export default function Admin() {
         <div className="grid md:grid-cols-3 gap-8">
           {/* List Sidebar for List-based tabs */}
           {['posts', 'activities', 'chapters', 'registrations'].includes(activeTab) && (
-            <div className="md:col-span-1 space-y-4">
+            <div className={`md:col-span-1 space-y-4 ${editingId ? 'hidden md:block' : 'block'}`}>
               {activeTab !== 'registrations' && (
                 <button 
                   onClick={() => handleEdit('new', {})}
@@ -380,7 +380,7 @@ export default function Admin() {
           )}
 
           {/* Editor Area */}
-          <div className={['hero', 'about', 'join', 'announcement'].includes(activeTab) ? 'md:col-span-3' : 'md:col-span-2'} ref={formRef}>
+          <div className={`${['hero', 'about', 'join', 'announcement'].includes(activeTab) ? 'md:col-span-3' : 'md:col-span-2'} ${['posts', 'activities', 'chapters'].includes(activeTab) && !editingId ? 'hidden md:block' : 'block'}`} ref={formRef}>
             {activeTab === 'registrations' ? (
                <div className="bg-theme-surface border border-theme-border rounded-xl p-6 sm:p-8 max-h-[600px] overflow-y-auto">
                  <h2 className="text-xl font-bold mb-6 text-theme-text text-center">Daftar Pendaftar (Seluruhnya)</h2>
@@ -424,9 +424,19 @@ export default function Admin() {
                </div>
             ) : editingId ? (
               <div className="bg-theme-surface border border-theme-border rounded-xl p-6 sm:p-8">
-                <h2 className="text-xl font-bold mb-6 text-theme-text">
-                  {['hero', 'about', 'join', 'announcement'].includes(activeTab) ? `Edit ${activeTab === 'hero' ? 'Beranda' : activeTab === 'about' ? 'Tentang Kami' : activeTab === 'join' ? 'Pendaftaran' : 'Pengumuman'}` : (editingId === 'new' ? 'Tambah' : 'Edit')} Data
-                </h2>
+                <div className="flex justify-between items-center mb-6">
+                  <h2 className="text-xl font-bold text-theme-text">
+                    {['hero', 'about', 'join', 'announcement'].includes(activeTab) ? `Edit ${activeTab === 'hero' ? 'Beranda' : activeTab === 'about' ? 'Tentang Kami' : activeTab === 'join' ? 'Pendaftaran' : 'Pengumuman'}` : (editingId === 'new' ? 'Tambah' : 'Edit')} Data
+                  </h2>
+                  {!['hero', 'about', 'join', 'announcement'].includes(activeTab) && (
+                    <button 
+                      onClick={handleCancel}
+                      className="md:hidden text-theme-primary hover:text-blue-400 font-bold text-sm transition-colors"
+                    >
+                      &larr; Kembali ke Daftar
+                    </button>
+                  )}
+                </div>
                 {renderFormInputs()}
                 <div className="flex gap-4 mt-6">
                   <button onClick={handleSave} className="bg-theme-primary hover:bg-blue-600 text-white px-6 py-2 rounded-md font-bold transition-colors">Simpan</button>

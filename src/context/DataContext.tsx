@@ -3,7 +3,7 @@ import { BlogPost, Activity, Chapter, HeroData, AboutData, JoinData, Registratio
 import { db, auth } from '../firebase';
 import { 
   collection, query, onSnapshot, doc, setDoc, updateDoc, deleteDoc, 
-  getDocFromServer 
+  getDocFromServer, addDoc
 } from 'firebase/firestore';
 import { onAuthStateChanged, User } from 'firebase/auth';
 

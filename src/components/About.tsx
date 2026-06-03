@@ -14,46 +14,44 @@ export default function About() {
   const statsMembers = aboutData?.statsMembers || "500+";
 
   return (
-    <section id="about" className="py-24 bg-theme-bg border-y border-theme-border">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid lg:grid-cols-2 gap-16 items-center mb-24">
+    <section id="about" className="py-8 sm:py-16 md:py-24 bg-theme-bg border-y border-theme-border flex-1 flex flex-col justify-center">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+        <div className="grid lg:grid-cols-2 gap-8 lg:gap-16 items-center mb-12 sm:mb-20">
           <motion.div
-            initial={{ opacity: 0, x: -30 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8 }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
           >
-            <h2 className="text-3xl md:text-5xl font-bold text-theme-text mb-6">
+            <h2 className="text-2xl sm:text-4xl md:text-5xl font-bold text-theme-text mb-4 sm:mb-6">
               {title}
             </h2>
-            <div className="h-1 w-20 bg-theme-primary rounded-full mb-8" />
+            <div className="h-1 w-16 sm:w-20 bg-theme-primary rounded-full mb-6 sm:mb-8" />
             
-            <p className="text-theme-muted text-lg leading-relaxed mb-6">
+            <p className="text-theme-muted text-sm sm:text-base md:text-lg leading-relaxed mb-4 sm:mb-6">
               {desc1}
             </p>
-            <p className="text-theme-muted text-lg leading-relaxed mb-8">
+            <p className="text-theme-muted text-sm sm:text-base md:text-lg leading-relaxed mb-6 sm:mb-8">
               {desc2}
             </p>
 
-            <div className="grid sm:grid-cols-2 gap-6">
-              <div className="bg-theme-surface/50 p-6 rounded-lg border border-theme-border">
-                <Users className="text-theme-primary mb-4" size={32} />
-                <h3 className="text-xl font-bold text-theme-text mb-2">Persaudaraan</h3>
-                <p className="text-theme-muted text-sm">Solidaritas sebagai keluarga besar yang saling membantu dan menghargai.</p>
+            <div className="grid sm:grid-cols-2 gap-4 sm:gap-6">
+              <div className="bg-theme-surface/50 p-4 sm:p-6 rounded-lg border border-theme-border">
+                <Users className="text-theme-primary mb-3 sm:mb-4" size={28} />
+                <h3 className="text-lg sm:text-xl font-bold text-theme-text mb-1 sm:text-normal">Persaudaraan</h3>
+                <p className="text-theme-muted text-xs sm:text-sm">Solidaritas sebagai keluarga besar yang saling membantu dan menghargai.</p>
               </div>
-              <div className="bg-theme-surface/50 p-6 rounded-lg border border-theme-border">
-                <Shield className="text-theme-secondary mb-4" size={32} />
-                <h3 className="text-xl font-bold text-theme-text mb-2">Aksi Positif</h3>
-                <p className="text-theme-muted text-sm">Gaya hidup positif, tertib berlalu lintas, dan aktif dalam baksos.</p>
+              <div className="bg-theme-surface/50 p-4 sm:p-6 rounded-lg border border-theme-border">
+                <Shield className="text-theme-secondary mb-3 sm:mb-4" size={28} />
+                <h3 className="text-lg sm:text-xl font-bold text-theme-text mb-1 sm:text-normal">Aksi Positif</h3>
+                <p className="text-theme-muted text-xs sm:text-sm">Gaya hidup positif, tertib berlalu lintas, dan aktif dalam baksos.</p>
               </div>
             </div>
           </motion.div>
 
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.6, delay: 0.1 }}
             className="relative"
           >
             <div className="aspect-square md:aspect-[4/3] rounded-2xl overflow-hidden shadow-2xl relative">
