@@ -71,6 +71,14 @@
     scroll-padding-top: 5rem;
   }
 
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
   img[src="/logo.jpg"] {
     filter: invert(var(--logo-invert));
     mix-blend-mode: var(--logo-blend);

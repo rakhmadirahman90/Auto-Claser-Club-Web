@@ -111,7 +111,7 @@ export default function Admin() {
               <div className="relative">
                 <input 
                   type="text"
-                  placeholder="Contoh: 089616746342 atau 62896..."
+                  placeholder="Nomor WhatsApp"
                   className="w-full bg-theme-bg border border-theme-border p-3 rounded-xl text-theme-text text-sm focus:outline-none focus:ring-2 focus:ring-theme-primary/30 focus:border-theme-primary transition-all pr-12 font-mono"
                   value={whatsapp}
                   onChange={(e) => setWhatsapp(e.target.value)}
@@ -127,7 +127,7 @@ export default function Admin() {
               <div className="relative">
                 <input 
                   type={showPassword ? "text" : "password"}
-                  placeholder="Masukkan password admin"
+                  placeholder="Password"
                   className="w-full bg-theme-bg border border-theme-border p-3 rounded-xl text-theme-text text-sm focus:outline-none focus:ring-2 focus:ring-theme-primary/30 focus:border-theme-primary transition-all font-mono pr-12"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
