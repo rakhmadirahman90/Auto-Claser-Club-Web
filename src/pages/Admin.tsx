@@ -9,6 +9,7 @@ import { Link } from 'react-router-dom';
 import { logout, auth, db } from '../firebase';
 import toast from 'react-hot-toast';
 import { BLOG_POSTS, ACTIVITIES, CHAPTERS, COMMITTEE_MEMBERS, MEMBER_PROFILES } from '../data';
+import { calendarEvents as CALENDAR_EVENTS } from '../data/calendarEvents';
 import ImageUpload from '../components/ImageUpload';
 import { HeroData, AboutData, Registration, CommitteeMember, MemberProfile } from '../types';
 
@@ -355,6 +356,9 @@ export default function Admin() {
       }
       if (memberProfiles.length === 0) {
         MEMBER_PROFILES.forEach(m => allPromises.push(addMemberProfile(m)));
+      }
+      if (calendarEvents.length === 0) {
+        CALENDAR_EVENTS.forEach(e => allPromises.push(addCalendarEvent(e)));
       }
       await Promise.all(allPromises);
     })();
@@ -1262,7 +1266,7 @@ export default function Admin() {
           : activeTab === 'profile'
             ? (memberProfiles.length > 0 ? memberProfiles : MEMBER_PROFILES)
             : activeTab === 'calendar'
-              ? calendarEvents
+              ? (calendarEvents && calendarEvents.length > 0 ? calendarEvents : CALENDAR_EVENTS)
               : registrations;
 
   const filteredDataList = dataList.filter((item: any) => {

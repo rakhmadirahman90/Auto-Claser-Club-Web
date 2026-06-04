@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { calendarEvents, CalendarEvent } from '../data/calendarEvents';
+import { useData } from '../context/DataContext';
 
 export default function CalendarACC() {
+  const { calendarEvents } = useData();
   const currentYear = new Date().getFullYear();
-  const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
+  const [selectedEvent, setSelectedEvent] = useState<any | null>(null);
   const months = [
     'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
     'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
