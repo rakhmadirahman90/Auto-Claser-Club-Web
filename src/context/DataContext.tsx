@@ -38,6 +38,7 @@ interface DataContextType {
   announcementData: AnnouncementData | null;
   registrations: Registration[];
   committee: CommitteeMember[];
+  memberProfiles: MemberProfile[];
   addPost: (post: BlogPost) => Promise<void>;
   updatePost: (id: string, post: BlogPost) => Promise<void>;
   deletePost: (id: string) => Promise<void>;
@@ -59,6 +60,9 @@ interface DataContextType {
   addCommitteeMember: (member: CommitteeMember) => Promise<void>;
   updateCommitteeMember: (id: string, member: CommitteeMember) => Promise<void>;
   deleteCommitteeMember: (id: string) => Promise<void>;
+  addMemberProfile: (member: MemberProfile) => Promise<void>;
+  updateMemberProfile: (id: string, member: MemberProfile) => Promise<void>;
+  deleteMemberProfile: (id: string) => Promise<void>;
 }
 
 const DataContext = createContext<DataContextType | null>(null);
@@ -80,6 +84,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [announcementData, setAnnouncementData] = useState<AnnouncementData | null>(null);
   const [registrations, setRegistrations] = useState<Registration[]>([]);
   const [committee, setCommittee] = useState<CommitteeMember[]>([]);
+  const [memberProfiles, setMemberProfiles] = useState<MemberProfile[]>([]);
 
   useEffect(() => {
     const unsubAuth = onAuthStateChanged(auth, u => setUser(u));
@@ -137,7 +142,11 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setCommittee(list.sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0)));
     }, err => handleFirestoreError(err, OperationType.LIST, 'committee'));
 
-    return () => { unsubPosts(); unsubActivities(); unsubChapters(); unsubHero(); unsubAbout(); unsubJoin(); unsubAnnouncement(); unsubReg(); unsubCommittee(); };
+    const unsubMembers = onSnapshot(query(collection(db, 'memberProfiles')), snap => {
+      setMemberProfiles(snap.docs.map(d => ({ id: d.id, ...d.data() } as MemberProfile)));
+    }, err => handleFirestoreError(err, OperationType.LIST, 'memberProfiles'));
+
+    return () => { unsubPosts(); unsubActivities(); unsubChapters(); unsubHero(); unsubAbout(); unsubJoin(); unsubAnnouncement(); unsubReg(); unsubCommittee(); unsubMembers(); };
   }, [user]);
 
   const addPost = async (post: BlogPost) => {
@@ -292,15 +301,34 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     catch (err) { handleFirestoreError(err, OperationType.DELETE, `committee/${id}`); }
   };
 
+  const addMemberProfile = async (member: MemberProfile) => {
+    const { id, ...data } = member;
+    const docId = id && id !== 'new' ? id : (Date.now().toString() + Math.random().toString(36).substring(2, 9));
+    try { await setDoc(doc(db, 'memberProfiles', docId), data); }
+    catch (err) { handleFirestoreError(err, OperationType.CREATE, `memberProfiles/${docId}`); }
+  };
+
+  const updateMemberProfile = async (id: string, member: MemberProfile) => {
+    const { id: _, ...data } = member;
+    try { await setDoc(doc(db, 'memberProfiles', id), data); }
+    catch (err) { handleFirestoreError(err, OperationType.UPDATE, `memberProfiles/${id}`); }
+  };
+
+  const deleteMemberProfile = async (id: string) => {
+    try { await deleteDoc(doc(db, 'memberProfiles', id)); }
+    catch (err) { handleFirestoreError(err, OperationType.DELETE, `memberProfiles/${id}`); }
+  };
+
   return (
     <DataContext.Provider value={{
-      user, posts, activities, chapters, heroData, aboutData, joinData, announcementData, registrations, committee,
+      user, posts, activities, chapters, heroData, aboutData, joinData, announcementData, registrations, committee, memberProfiles,
       addPost, updatePost, deletePost, likePost, viewPost,
       addActivity, updateActivity, deleteActivity,
       addChapter, updateChapter, deleteChapter,
       updateHero, updateAbout, updateJoin, updateAnnouncement,
       addRegistration, updateRegistration, deleteRegistration,
-      addCommitteeMember, updateCommitteeMember, deleteCommitteeMember
+      addCommitteeMember, updateCommitteeMember, deleteCommitteeMember,
+      addMemberProfile, updateMemberProfile, deleteMemberProfile
     }}>
       {children}
     </DataContext.Provider>

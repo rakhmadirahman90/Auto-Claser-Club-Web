@@ -8,7 +8,7 @@ import {
 import { Link } from 'react-router-dom';
 import { loginWithGoogle, logout } from '../firebase';
 import toast from 'react-hot-toast';
-import { BLOG_POSTS, ACTIVITIES, CHAPTERS, COMMITTEE_MEMBERS } from '../data';
+import { BLOG_POSTS, ACTIVITIES, CHAPTERS, COMMITTEE_MEMBERS, MEMBER_PROFILES } from '../data';
 import ImageUpload from '../components/ImageUpload';
 import { HeroData, AboutData, Registration, CommitteeMember, MemberProfile } from '../types';
 
@@ -23,7 +23,8 @@ export default function Admin() {
     addChapter, updateChapter, deleteChapter,
     updateHero, updateAbout, updateJoin, updateAnnouncement,
     addRegistration, updateRegistration, deleteRegistration,
-    addCommitteeMember, updateCommitteeMember, deleteCommitteeMember
+    addCommitteeMember, updateCommitteeMember, deleteCommitteeMember,
+    memberProfiles, addMemberProfile, updateMemberProfile, deleteMemberProfile
   } = useData();
 
   const [activeTab, setActiveTab] = useState<TabType>('posts');
@@ -175,6 +176,12 @@ export default function Admin() {
       } else if (editingId) {
         savePromise = updateRegistration(editingId, formData);
       }
+    } else if (activeTab === 'profile') {
+      if (editingId === 'new') {
+        savePromise = addMemberProfile({ ...formData, id: Date.now().toString() });
+      } else if (editingId) {
+        savePromise = updateMemberProfile(editingId, formData);
+      }
     } else if (activeTab === 'hero') {
       savePromise = updateHero({ ...formData, id: 'hero' });
     } else if (activeTab === 'about') {
@@ -205,6 +212,7 @@ export default function Admin() {
     if (activeTab === 'chapters') deletePromise = deleteChapter(id);
     if (activeTab === 'committee') deletePromise = deleteCommitteeMember(id);
     if (activeTab === 'registrations') deletePromise = deleteRegistration(id);
+    if (activeTab === 'profile') deletePromise = deleteMemberProfile(id);
 
     toast.promise(deletePromise, {
       loading: 'Menghapus data...',
@@ -228,6 +236,9 @@ export default function Admin() {
       }
       if (committee.length === 0) {
         COMMITTEE_MEMBERS.forEach(m => allPromises.push(addCommitteeMember(m)));
+      }
+      if (memberProfiles.length === 0) {
+        MEMBER_PROFILES.forEach(m => allPromises.push(addMemberProfile(m)));
       }
       await Promise.all(allPromises);
     })();
@@ -537,6 +548,42 @@ export default function Admin() {
           <div>
             <label className="block text-xs font-bold tracking-wider text-theme-muted uppercase mb-1.5 font-bold">Alamat / Domisili Lengkap</label>
             <textarea className="w-full bg-theme-bg border border-theme-border p-3 rounded-xl text-theme-text text-sm focus:outline-none focus:ring-2 focus:ring-theme-primary/30 focus:border-theme-primary transition-all duration-200 min-h-20" placeholder="Alamat domisili lengkap..." value={formData.address || ''} onChange={e => setFormData({...formData, address: e.target.value})} />
+          </div>
+        </div>
+      );
+    }
+    if (activeTab === 'profile') {
+      return (
+        <div className="space-y-4">
+          <div>
+            <label className="block text-xs font-bold tracking-wider text-theme-muted uppercase mb-1.5">Nama Lengkap Anggota</label>
+            <input className="w-full bg-theme-bg border border-theme-border p-3 rounded-xl text-theme-text text-sm focus:outline-none focus:ring-2 focus:ring-theme-primary/30 focus:border-theme-primary transition-all duration-200" placeholder="Contoh: Budi Santoso" value={formData.name || ''} onChange={e => setFormData({...formData, name: e.target.value})} />
+          </div>
+          <div>
+            <label className="block text-xs font-bold tracking-wider text-theme-muted uppercase mb-1.5">Peran / Status</label>
+            <input className="w-full bg-theme-bg border border-theme-border p-3 rounded-xl text-theme-text text-sm focus:outline-none focus:ring-2 focus:ring-theme-primary/30 focus:border-theme-primary transition-all duration-200" placeholder="Contoh: Anggota Senior" value={formData.role || ''} onChange={e => setFormData({...formData, role: e.target.value})} />
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-bold tracking-wider text-theme-muted uppercase mb-1.5">No. KTA</label>
+              <input className="w-full bg-theme-bg border border-theme-border p-3 rounded-xl text-theme-text text-sm focus:outline-none focus:ring-2 focus:ring-theme-primary/30 focus:border-theme-primary transition-all duration-200" placeholder="Contoh: KTA-2020-001" value={formData.membershipNumber || ''} onChange={e => setFormData({...formData, membershipNumber: e.target.value})} />
+            </div>
+            <div>
+              <label className="block text-xs font-bold tracking-wider text-theme-muted uppercase mb-1.5">Mobil</label>
+              <input className="w-full bg-theme-bg border border-theme-border p-3 rounded-xl text-theme-text text-sm focus:outline-none focus:ring-2 focus:ring-theme-primary/30 focus:border-theme-primary transition-all duration-200" placeholder="Contoh: Toyota Avanza" value={formData.car || ''} onChange={e => setFormData({...formData, car: e.target.value})} />
+            </div>
+            <div>
+              <label className="block text-xs font-bold tracking-wider text-theme-muted uppercase mb-1.5">No. Plat</label>
+              <input className="w-full bg-theme-bg border border-theme-border p-3 rounded-xl text-theme-text text-sm focus:outline-none focus:ring-2 focus:ring-theme-primary/30 focus:border-theme-primary transition-all duration-200" placeholder="Contoh: B 1234 ABC" value={formData.licensePlate || ''} onChange={e => setFormData({...formData, licensePlate: e.target.value})} />
+            </div>
+            <div>
+              <label className="block text-xs font-bold tracking-wider text-theme-muted uppercase mb-1.5">Tahun Bergabung</label>
+              <input className="w-full bg-theme-bg border border-theme-border p-3 rounded-xl text-theme-text text-sm focus:outline-none focus:ring-2 focus:ring-theme-primary/30 focus:border-theme-primary transition-all duration-200" placeholder="Contoh: 2020" value={formData.yearJoined || ''} onChange={e => setFormData({...formData, yearJoined: e.target.value})} />
+            </div>
+          </div>
+          <div>
+            <label className="block text-xs font-bold tracking-wider text-theme-muted uppercase mb-1.5">Foto Profil</label>
+            <ImageUpload value={formData.imageUrl || ''} onChange={url => setFormData({...formData, imageUrl: url})} />
           </div>
         </div>
       );
@@ -875,12 +922,16 @@ export default function Admin() {
                 📍
               </div>
             );
-          } else if (activeTab === 'registrations') {
-            subtitle = `${item.phone || ''} • ${item.vehicleType || ''}`;
-            avatarDisplay = (
-              <div className="h-10 w-10 shrink-0 rounded-xl bg-gradient-to-br from-purple-500/10 to-indigo-500/15 text-purple-500 flex items-center justify-center font-black text-sm">
-                📝
+          } else if (activeTab === 'profile') {
+            subtitle = `${item.vehicleType || ''} • ${item.licensePlate || ''}`;
+            avatarDisplay = item.imageUrl ? (
+              <div className="h-10 w-10 rounded-xl overflow-hidden shrink-0 border border-theme-border/50 bg-theme-bg/40 flex items-center justify-center">
+                <img src={item.imageUrl} alt="" className="h-full w-full object-cover" referrerPolicy="no-referrer" />
               </div>
+            ) : (
+                <div className="h-10 w-10 shrink-0 rounded-xl bg-gradient-to-br from-amber-500/10 to-orange-500/15 text-amber-600 flex items-center justify-center font-black text-xs">
+                  {item.name.substring(0, 2).toUpperCase()}
+                </div>
             );
           }
 
@@ -1050,7 +1101,9 @@ export default function Admin() {
         ? (committee.length > 0 ? committee : COMMITTEE_MEMBERS) 
         : activeTab === 'chapters'
           ? (chapters.length > 0 ? chapters : CHAPTERS)
-          : registrations;
+          : activeTab === 'profile'
+            ? (memberProfiles.length > 0 ? memberProfiles : MEMBER_PROFILES)
+            : registrations;
 
   const filteredDataList = dataList.filter((item: any) => {
     if (!searchTerm) return true;
