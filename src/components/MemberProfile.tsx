@@ -47,7 +47,7 @@ export default function MemberProfile() {
         />
       </div>
 
-      <div className="flex-grow relative w-full overflow-y-auto flex items-center justify-center p-2">
+      <div className="flex-grow relative w-full flex items-center justify-center p-2 min-h-0">
         <AnimatePresence mode="wait">
           {filteredProfiles.length > 0 ? (
             <motion.div
@@ -56,35 +56,35 @@ export default function MemberProfile() {
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ duration: 0.3 }}
-              className="bg-theme-surface border border-theme-border p-5 sm:p-8 rounded-3xl shadow-lg w-full max-w-sm md:max-w-md lg:max-w-lg flex flex-col items-center"
+              className="bg-theme-surface border border-theme-border p-4 sm:p-6 rounded-3xl shadow-lg w-full max-w-sm md:max-w-md flex flex-col items-center max-h-full overflow-y-auto"
             >
-              <div className="w-full aspect-[4/3] mb-5 bg-gray-100 rounded-2xl overflow-hidden flex items-center justify-center shrink-0">
+              <div className="w-full aspect-[4/3] mb-3 bg-gray-100 rounded-2xl overflow-hidden flex items-center justify-center shrink-0">
                 <img 
                   src={filteredProfiles[currentIndex].imageUrl} 
                   alt={filteredProfiles[currentIndex].name} 
-                  className="w-full h-full object-cover" 
+                  className="w-full h-full object-contain" 
                 />
               </div>
-              <h3 className="font-bold text-2xl sm:text-3xl text-theme-text mb-2 truncate w-full text-center">{filteredProfiles[currentIndex].name}</h3>
-              <p className="text-theme-primary text-sm sm:text-base font-semibold mb-5">{filteredProfiles[currentIndex].role}</p>
-              <div className="space-y-2 sm:space-y-3 text-sm sm:text-base text-theme-text w-full">
-                <div className="flex justify-between border-b border-theme-border pb-2 sm:pb-3">
+              <h3 className="font-bold text-xl sm:text-2xl text-theme-text mb-1 truncate w-full text-center">{filteredProfiles[currentIndex].name}</h3>
+              <p className="text-theme-primary text-xs sm:text-sm font-semibold mb-3">{filteredProfiles[currentIndex].role}</p>
+              <div className="space-y-1 sm:space-y-2 text-xs sm:text-sm text-theme-text w-full">
+                <div className="flex justify-between border-b border-theme-border pb-1 sm:pb-2">
                   <span className="text-theme-muted">No. KTA:</span>
                   <span className="font-semibold font-mono">{filteredProfiles[currentIndex].membershipNumber}</span>
                 </div>
-                <div className="flex justify-between border-b border-theme-border pb-2 sm:pb-3">
+                <div className="flex justify-between border-b border-theme-border pb-1 sm:pb-2">
                   <span className="text-theme-muted">Nama:</span>
                   <span className="font-semibold font-mono">{filteredProfiles[currentIndex].name}</span>
                 </div>
-                <div className="flex justify-between border-b border-theme-border pb-2 sm:pb-3">
+                <div className="flex justify-between border-b border-theme-border pb-1 sm:pb-2">
                   <span className="text-theme-muted">Mobil:</span>
                   <span className="font-semibold font-mono">{filteredProfiles[currentIndex].car}</span>
                 </div>
-                <div className="flex justify-between border-b border-theme-border pb-2 sm:pb-3">
+                <div className="flex justify-between border-b border-theme-border pb-1 sm:pb-2">
                   <span className="text-theme-muted">No. Plat:</span>
                   <span className="font-semibold font-mono">{filteredProfiles[currentIndex].licensePlate}</span>
                 </div>
-                <div className="flex justify-between border-b border-theme-border pb-2 sm:pb-3">
+                <div className="flex justify-between border-b border-theme-border pb-1 sm:pb-2">
                   <span className="text-theme-muted">Tahun Bergabung:</span>
                   <span className="font-semibold font-mono">{filteredProfiles[currentIndex].yearJoined}</span>
                 </div>
@@ -97,12 +97,21 @@ export default function MemberProfile() {
       </div>
 
       {filteredProfiles.length > 1 && (
-        <div className="flex justify-center gap-4 mt-6">
-            <button onClick={prevProfile} className="p-3 rounded-full bg-theme-surface border border-theme-border hover:bg-theme-bg text-theme-text">
-                <ChevronLeft size={24} />
+        <div className="flex justify-center items-center gap-4 mt-6">
+            <button onClick={prevProfile} className="p-2 rounded-full border border-theme-border text-theme-text hover:bg-theme-bg transition-colors">
+                <ChevronLeft size={20} />
             </button>
-            <button onClick={nextProfile} className="p-3 rounded-full bg-theme-surface border border-theme-border hover:bg-theme-bg text-theme-text">
-                <ChevronRight size={24} />
+            <div className="flex gap-1.5">
+                {filteredProfiles.map((_, index) => (
+                    <motion.div
+                        key={index}
+                        className={`h-2 w-2 rounded-full transition-colors ${index === currentIndex ? 'bg-theme-primary' : 'bg-theme-border'}`}
+                        animate={{ scale: index === currentIndex ? 1.2 : 1 }}
+                    />
+                ))}
+            </div>
+            <button onClick={nextProfile} className="p-2 rounded-full border border-theme-border text-theme-text hover:bg-theme-bg transition-colors">
+                <ChevronRight size={20} />
             </button>
         </div>
       )}
