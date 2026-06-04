@@ -91,4 +91,12 @@ export interface CommitteeMember {
   displayOrder: number;
 }
 
+export interface CalendarEvent {
+  id: string;
+  date: number; // 1-31
+  month: number; // 0-11
+  type: 'agenda' | 'birthday' | 'holiday';
+  title: string;
+}
+
 

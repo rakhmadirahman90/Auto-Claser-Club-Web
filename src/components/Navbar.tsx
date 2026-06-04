@@ -36,17 +36,24 @@ export default function Navbar() {
         { name: 'Profil Anggota', href: '#member-profile' },
       ]
     },
-    { name: 'Agenda', href: '#activities' },
+    { 
+      name: 'Agenda', 
+      href: '#activities',
+      submenu: [
+        { name: 'Agenda', href: '#activities' },
+        { name: 'Kalender ACC', href: '#calendar-acc' },
+      ]
+    },
     { name: 'Berita', href: '#news' },
     { name: 'Pendaftaran', href: '#join' },
   ];
 
   const activeHash = location.hash || '#home';
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
 
   const handleScrollToSegment = () => {
     setIsOpen(false);
-    setIsDropdownOpen(false);
+    setActiveDropdown(null);
   };
 
   return (
@@ -76,8 +83,7 @@ export default function Navbar() {
                   <div
                     key={link.name}
                     className="relative"
-                    onMouseEnter={() => setIsDropdownOpen(true)}
-                    onMouseLeave={() => setIsDropdownOpen(false)}
+                    onClick={() => setActiveDropdown(activeDropdown === link.name ? null : link.name)}
                   >
                     <button
                       className={`font-semibold transition-colors text-sm tracking-wide relative py-2 flex items-center gap-1 focus:outline-none cursor-pointer ${
@@ -85,14 +91,14 @@ export default function Navbar() {
                       }`}
                     >
                       {link.name}
-                      <ChevronDown size={14} className={`transition-transform duration-200 ${isDropdownOpen ? 'rotate-180 text-theme-primary' : 'text-theme-muted'}`} />
+                      <ChevronDown size={14} className={`transition-transform duration-200 ${activeDropdown === link.name ? 'rotate-180 text-theme-primary' : 'text-theme-muted'}`} />
                       <span className={`absolute -bottom-1 left-0 h-0.5 bg-theme-secondary transition-all ${
                         isSubActive ? 'w-full' : 'w-0'
                       }`}></span>
                     </button>
                     
                     <AnimatePresence>
-                      {isDropdownOpen && (
+                      {activeDropdown === link.name && (
                         <motion.div
                           initial={{ opacity: 0, y: 8, scale: 0.95 }}
                           animate={{ opacity: 1, y: 0, scale: 1 }}

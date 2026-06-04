@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { BlogPost, Activity, Chapter, HeroData, AboutData, JoinData, Registration, AnnouncementData, CommitteeMember, MemberProfile } from '../types';
+import { BlogPost, Activity, Chapter, HeroData, AboutData, JoinData, Registration, AnnouncementData, CommitteeMember, MemberProfile, CalendarEvent } from '../types';
 import { db, auth } from '../firebase';
 import { BLOG_POSTS } from '../data';
 import { 
@@ -39,6 +39,7 @@ interface DataContextType {
   registrations: Registration[];
   committee: CommitteeMember[];
   memberProfiles: MemberProfile[];
+  calendarEvents: CalendarEvent[];
   addPost: (post: BlogPost) => Promise<void>;
   updatePost: (id: string, post: BlogPost) => Promise<void>;
   deletePost: (id: string) => Promise<void>;
@@ -63,6 +64,9 @@ interface DataContextType {
   addMemberProfile: (member: MemberProfile) => Promise<void>;
   updateMemberProfile: (id: string, member: MemberProfile) => Promise<void>;
   deleteMemberProfile: (id: string) => Promise<void>;
+  addCalendarEvent: (event: CalendarEvent) => Promise<void>;
+  updateCalendarEvent: (id: string, event: CalendarEvent) => Promise<void>;
+  deleteCalendarEvent: (id: string) => Promise<void>;
   isAdminSession: boolean;
   setIsAdminSession: (isAdmin: boolean) => void;
 }
@@ -88,6 +92,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [registrations, setRegistrations] = useState<Registration[]>([]);
   const [committee, setCommittee] = useState<CommitteeMember[]>([]);
   const [memberProfiles, setMemberProfiles] = useState<MemberProfile[]>([]);
+  const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([]);
 
   useEffect(() => {
     const unsubAuth = onAuthStateChanged(auth, u => setUser(u));
@@ -149,7 +154,11 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setMemberProfiles(snap.docs.map(d => ({ id: d.id, ...d.data() } as MemberProfile)));
     }, err => handleFirestoreError(err, OperationType.LIST, 'memberProfiles'));
 
-    return () => { unsubPosts(); unsubActivities(); unsubChapters(); unsubHero(); unsubAbout(); unsubJoin(); unsubAnnouncement(); unsubReg(); unsubCommittee(); unsubMembers(); };
+    const unsubCalendar = onSnapshot(query(collection(db, 'calendarEvents')), snap => {
+      setCalendarEvents(snap.docs.map(d => ({ id: d.id, ...d.data() } as CalendarEvent)));
+    }, err => handleFirestoreError(err, OperationType.LIST, 'calendarEvents'));
+
+    return () => { unsubPosts(); unsubActivities(); unsubChapters(); unsubHero(); unsubAbout(); unsubJoin(); unsubAnnouncement(); unsubReg(); unsubCommittee(); unsubMembers(); unsubCalendar(); };
   }, [user, isAdminSession]);
 
   const addPost = async (post: BlogPost) => {
@@ -322,9 +331,25 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     catch (err) { handleFirestoreError(err, OperationType.DELETE, `memberProfiles/${id}`); }
   };
 
+  const addCalendarEvent = async (event: CalendarEvent) => {
+    const { id, ...data } = event;
+    const docId = id && id !== 'new' ? id : (Date.now().toString() + Math.random().toString(36).substring(2, 9));
+    try { await setDoc(doc(db, 'calendarEvents', docId), data); }
+    catch (err) { handleFirestoreError(err, OperationType.CREATE, `calendarEvents/${docId}`); }
+  };
+  const updateCalendarEvent = async (id: string, event: CalendarEvent) => {
+    const { id: _, ...data } = event;
+    try { await setDoc(doc(db, 'calendarEvents', id), data); }
+    catch (err) { handleFirestoreError(err, OperationType.UPDATE, `calendarEvents/${id}`); }
+  };
+  const deleteCalendarEvent = async (id: string) => {
+    try { await deleteDoc(doc(db, 'calendarEvents', id)); }
+    catch (err) { handleFirestoreError(err, OperationType.DELETE, `calendarEvents/${id}`); }
+  };
+
   return (
     <DataContext.Provider value={{
-      user, posts, activities, chapters, heroData, aboutData, joinData, announcementData, registrations, committee, memberProfiles,
+      user, posts, activities, chapters, heroData, aboutData, joinData, announcementData, registrations, committee, memberProfiles, calendarEvents,
       isAdminSession, setIsAdminSession,
       addPost, updatePost, deletePost, likePost, viewPost,
       addActivity, updateActivity, deleteActivity,
@@ -332,7 +357,8 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       updateHero, updateAbout, updateJoin, updateAnnouncement,
       addRegistration, updateRegistration, deleteRegistration,
       addCommitteeMember, updateCommitteeMember, deleteCommitteeMember,
-      addMemberProfile, updateMemberProfile, deleteMemberProfile
+      addMemberProfile, updateMemberProfile, deleteMemberProfile,
+      addCalendarEvent, updateCalendarEvent, deleteCalendarEvent
     }}>
       {children}
     </DataContext.Provider>

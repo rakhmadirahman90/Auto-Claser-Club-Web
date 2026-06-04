@@ -6,6 +6,7 @@ import Hero from '../components/Hero';
 import About from '../components/About';
 import MemberProfile from '../components/MemberProfile';
 import Activities from '../components/Activities';
+import CalendarACC from '../components/CalendarACC';
 import News from '../components/News';
 import Join from '../components/Join';
 import Footer from '../components/Footer';
@@ -17,7 +18,7 @@ export default function Home() {
 
   useEffect(() => {
     const hash = location.hash.toLowerCase();
-    const validSections = ['#home', '#about', '#sejarah', '#struktur', '#dokumen', '#member-profile', '#activities', '#news', '#join'];
+    const validSections = ['#home', '#about', '#sejarah', '#struktur', '#dokumen', '#member-profile', '#activities', '#calendar-acc', '#news', '#join'];
     if (validSections.includes(hash)) {
       const sect = hash.substring(1);
       if (['about', 'sejarah', 'struktur', 'dokumen'].includes(sect)) {
@@ -42,6 +43,8 @@ export default function Home() {
         return <MemberProfile key="member-profile" />;
       case 'activities':
         return <Activities key="activities" />;
+      case 'calendar-acc':
+        return <CalendarACC key="calendar-acc" />;
       case 'news':
         return <News key="news" />;
       case 'join':

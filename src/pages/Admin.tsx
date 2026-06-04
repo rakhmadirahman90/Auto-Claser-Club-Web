@@ -12,7 +12,7 @@ import { BLOG_POSTS, ACTIVITIES, CHAPTERS, COMMITTEE_MEMBERS, MEMBER_PROFILES } 
 import ImageUpload from '../components/ImageUpload';
 import { HeroData, AboutData, Registration, CommitteeMember, MemberProfile } from '../types';
 
-type TabType = 'posts' | 'activities' | 'chapters' | 'hero' | 'about' | 'join' | 'announcement' | 'registrations' | 'committee' | 'profile';
+type TabType = 'posts' | 'activities' | 'chapters' | 'hero' | 'about' | 'join' | 'announcement' | 'registrations' | 'committee' | 'profile' | 'calendar';
 
 export default function Admin() {
   const { 
@@ -25,6 +25,7 @@ export default function Admin() {
     addRegistration, updateRegistration, deleteRegistration,
     addCommitteeMember, updateCommitteeMember, deleteCommitteeMember,
     memberProfiles, addMemberProfile, updateMemberProfile, deleteMemberProfile,
+    calendarEvents, addCalendarEvent, updateCalendarEvent, deleteCalendarEvent,
     isAdminSession, setIsAdminSession
   } = useData();
 
@@ -290,6 +291,12 @@ export default function Admin() {
       } else if (editingId) {
         savePromise = updateMemberProfile(editingId, formData);
       }
+    } else if (activeTab === 'calendar') {
+      if (editingId === 'new') {
+        savePromise = addCalendarEvent({ ...formData, id: Date.now().toString() });
+      } else if (editingId) {
+        savePromise = updateCalendarEvent(editingId, formData);
+      }
     } else if (activeTab === 'hero') {
       savePromise = updateHero({ ...formData, id: 'hero' });
     } else if (activeTab === 'about') {
@@ -321,6 +328,7 @@ export default function Admin() {
     if (activeTab === 'committee') deletePromise = deleteCommitteeMember(id);
     if (activeTab === 'registrations') deletePromise = deleteRegistration(id);
     if (activeTab === 'profile') deletePromise = deleteMemberProfile(id);
+    if (activeTab === 'calendar') deletePromise = deleteCalendarEvent(id);
 
     toast.promise(deletePromise, {
       loading: 'Menghapus data...',
@@ -696,6 +704,34 @@ export default function Admin() {
         </div>
       );
     }
+    if (activeTab === 'calendar') {
+      return (
+        <div className="space-y-4">
+          <div>
+            <label className="block text-xs font-bold tracking-wider text-theme-muted uppercase mb-1.5">Judul Agenda</label>
+            <input className="w-full bg-theme-bg border border-theme-border p-3 rounded-xl text-theme-text text-sm focus:outline-none focus:ring-2 focus:ring-theme-primary/30 focus:border-theme-primary transition-all duration-200" placeholder="Masukkan judul..." value={formData.title || ''} onChange={e => setFormData({...formData, title: e.target.value})} />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-bold tracking-wider text-theme-muted uppercase mb-1.5">Tanggal (1-31)</label>
+              <input type="number" className="w-full bg-theme-bg border border-theme-border p-3 rounded-xl text-theme-text text-sm focus:outline-none focus:ring-2 focus:ring-theme-primary/30 focus:border-theme-primary transition-all duration-200" value={formData.date || ''} onChange={e => setFormData({...formData, date: parseInt(e.target.value) || 1})} />
+            </div>
+            <div>
+              <label className="block text-xs font-bold tracking-wider text-theme-muted uppercase mb-1.5">Bulan (1-12)</label>
+              <input type="number" className="w-full bg-theme-bg border border-theme-border p-3 rounded-xl text-theme-text text-sm focus:outline-none focus:ring-2 focus:ring-theme-primary/30 focus:border-theme-primary transition-all duration-200" value={(formData.month || 0) + 1} onChange={e => setFormData({...formData, month: parseInt(e.target.value) - 1 || 0})} />
+            </div>
+          </div>
+          <div>
+            <label className="block text-xs font-bold tracking-wider text-theme-muted uppercase mb-1.5">Tipe</label>
+            <select className="w-full bg-theme-bg border border-theme-border p-3 rounded-xl text-theme-text text-sm" value={formData.type || 'agenda'} onChange={e => setFormData({...formData, type: e.target.value})}>
+                <option value="agenda">Agenda</option>
+                <option value="birthday">Ultah</option>
+                <option value="holiday">Libur</option>
+            </select>
+          </div>
+        </div>
+      );
+    }
     return null;
   };
 
@@ -795,7 +831,7 @@ export default function Admin() {
     if (type === 'committee') {
       const memberName = data.name || 'Nama Pengurus Resmi';
       const memberRole = data.role || 'Jabatan Kepengurusan';
-      const memberDesc = data.description || 'Deskripsi singkat tanggung jawab peran pengurus atau biografi singkat...';
+      const memberDesc = data.description || 'Deskripsi singkat tanggung jawab peran pengurus...';
       const memberImg = data.imageUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=600';
       return (
         <div className="bg-theme-surface border border-theme-border rounded-2xl p-4 text-center shadow-md max-w-sm mx-auto space-y-3">
@@ -809,9 +845,15 @@ export default function Admin() {
           <p className="text-xs text-theme-muted line-clamp-3 leading-relaxed border-t border-theme-border/50 pt-2.5">
             {memberDesc}
           </p>
-          <div className="text-[10px] text-theme-muted font-semibold bg-theme-bg/50 px-2 py-0.5 rounded-md inline-block">
-            Urutan Tampilan: {data.displayOrder || 0}
-          </div>
+        </div>
+      );
+    }
+    if (type === 'calendar') {
+      return (
+        <div className="bg-theme-surface border border-theme-border rounded-2xl p-5 shadow-md">
+          <h4 className="font-bold text-theme-text">{data.title || 'Agenda / Ulang Tahun'}</h4>
+          <p className="text-xs text-theme-muted mt-1">{data.date}-{data.month + 1}</p>
+          <span className="inline-block mt-2 px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-theme-primary/10 text-theme-primary">{data.type}</span>
         </div>
       );
     }
@@ -1041,6 +1083,13 @@ export default function Admin() {
                   {item.name.substring(0, 2).toUpperCase()}
                 </div>
             );
+          } else if (activeTab === 'calendar') {
+            subtitle = `${item.type} • ${item.date}/${item.month + 1}`;
+            avatarDisplay = (
+              <div className="h-10 w-10 shrink-0 rounded-xl bg-gradient-to-br from-red-500/10 to-pink-500/15 text-red-500 flex items-center justify-center font-black text-xs">
+                📅
+              </div>
+            );
           }
 
           return (
@@ -1198,7 +1247,8 @@ export default function Admin() {
     { id: 'about' as TabType, label: 'Tentang Kami', icon: Info },
     { id: 'join' as TabType, label: 'Pendaftaran', icon: UserPlus },
     { id: 'announcement' as TabType, label: 'Pengumuman', icon: Bell },
-    { id: 'profile' as TabType, label: 'Profil Anggota', icon: User }
+    { id: 'profile' as TabType, label: 'Profil Anggota', icon: User },
+    { id: 'calendar' as TabType, label: 'Edit Kalender', icon: Calendar }
   ];
 
   const dataList = activeTab === 'posts' 
@@ -1211,7 +1261,9 @@ export default function Admin() {
           ? (chapters.length > 0 ? chapters : CHAPTERS)
           : activeTab === 'profile'
             ? (memberProfiles.length > 0 ? memberProfiles : MEMBER_PROFILES)
-            : registrations;
+            : activeTab === 'calendar'
+              ? calendarEvents
+              : registrations;
 
   const filteredDataList = dataList.filter((item: any) => {
     if (!searchTerm) return true;
