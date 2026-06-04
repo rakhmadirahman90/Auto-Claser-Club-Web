@@ -6,7 +6,7 @@ import {
   MapPin, Users, ClipboardList, Search, X, Eye, ThumbsUp, User 
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { loginWithGoogle, logout, signInWithEmailAndPassword, auth } from '../firebase';
+import { loginWithGoogle, logout, signInWithEmailAndPassword, auth, createUserWithEmailAndPassword } from '../firebase';
 import toast from 'react-hot-toast';
 import { BLOG_POSTS, ACTIVITIES, CHAPTERS, COMMITTEE_MEMBERS, MEMBER_PROFILES } from '../data';
 import ImageUpload from '../components/ImageUpload';

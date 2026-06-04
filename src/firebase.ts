@@ -5,21 +5,12 @@ import {
   browserLocalPersistence, setPersistence
 } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
-
-const firebaseConfig = {
-  apiKey: "AIzaSyCeSU11fbjNcojjlfgKudsjq4vIv8C3oSw",
-  authDomain: "polynomial-node-c2gpt.firebaseapp.com",
-  projectId: "polynomial-node-c2gpt",
-  storageBucket: "polynomial-node-c2gpt.firebasestorage.app",
-  messagingSenderId: "397253837002",
-  appId: "1:397253837002:web:7ebe7dbe248c8c72f0b433"
-};
+import firebaseConfig from '../firebase-applet-config.json';
 
 const app = initializeApp(firebaseConfig);
 
-// Use the default database if no specific ID is required for standard deployments
-// The AI Studio managed database ID is ai-studio-627e40f9-c96c-4358-a80c-b5e69d7e6312
-export const db = getFirestore(app); 
+// Use the specific firestoreDatabaseId from the config if available
+export const db = getFirestore(app, (firebaseConfig as any).firestoreDatabaseId || undefined); 
 
 export const auth = getAuth(app);
 setPersistence(auth, browserLocalPersistence);

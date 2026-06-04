@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { BlogPost, Activity, Chapter, HeroData, AboutData, JoinData, Registration, AnnouncementData, CommitteeMember } from '../types';
+import { BlogPost, Activity, Chapter, HeroData, AboutData, JoinData, Registration, AnnouncementData, CommitteeMember, MemberProfile } from '../types';
 import { db, auth } from '../firebase';
 import { BLOG_POSTS } from '../data';
 import { 
