@@ -4,6 +4,7 @@ import { useLocation } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Hero from '../components/Hero';
 import About from '../components/About';
+import MemberProfile from '../components/MemberProfile';
 import Activities from '../components/Activities';
 import News from '../components/News';
 import Join from '../components/Join';
@@ -16,7 +17,7 @@ export default function Home() {
 
   useEffect(() => {
     const hash = location.hash.toLowerCase();
-    const validSections = ['#home', '#about', '#sejarah', '#struktur', '#dokumen', '#activities', '#news', '#join'];
+    const validSections = ['#home', '#about', '#sejarah', '#struktur', '#dokumen', '#member-profile', '#activities', '#news', '#join'];
     if (validSections.includes(hash)) {
       const sect = hash.substring(1);
       if (['about', 'sejarah', 'struktur', 'dokumen'].includes(sect)) {
@@ -37,6 +38,8 @@ export default function Home() {
     switch (activeSection) {
       case 'about':
         return <About key="about" />;
+      case 'member-profile':
+        return <MemberProfile key="member-profile" />;
       case 'activities':
         return <Activities key="activities" />;
       case 'news':

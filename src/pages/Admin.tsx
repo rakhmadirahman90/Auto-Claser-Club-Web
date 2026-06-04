@@ -3,16 +3,16 @@ import { useData } from '../context/DataContext';
 import { 
   Plus, Edit2, Trash2, ArrowLeft, LogOut, Database, 
   Home, Info, UserPlus, Bell, FileText, Calendar, 
-  MapPin, Users, ClipboardList, Search, X, Eye, ThumbsUp 
+  MapPin, Users, ClipboardList, Search, X, Eye, ThumbsUp, User 
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { loginWithGoogle, logout } from '../firebase';
 import toast from 'react-hot-toast';
 import { BLOG_POSTS, ACTIVITIES, CHAPTERS, COMMITTEE_MEMBERS } from '../data';
 import ImageUpload from '../components/ImageUpload';
-import { HeroData, AboutData, Registration, CommitteeMember } from '../types';
+import { HeroData, AboutData, Registration, CommitteeMember, MemberProfile } from '../types';
 
-type TabType = 'posts' | 'activities' | 'chapters' | 'hero' | 'about' | 'join' | 'announcement' | 'registrations' | 'committee';
+type TabType = 'posts' | 'activities' | 'chapters' | 'hero' | 'about' | 'join' | 'announcement' | 'registrations' | 'committee' | 'profile';
 
 export default function Admin() {
   const { 
@@ -1038,7 +1038,8 @@ export default function Admin() {
     { id: 'hero' as TabType, label: 'Beranda', icon: Home },
     { id: 'about' as TabType, label: 'Tentang Kami', icon: Info },
     { id: 'join' as TabType, label: 'Pendaftaran', icon: UserPlus },
-    { id: 'announcement' as TabType, label: 'Pengumuman', icon: Bell }
+    { id: 'announcement' as TabType, label: 'Pengumuman', icon: Bell },
+    { id: 'profile' as TabType, label: 'Profil Anggota', icon: User }
   ];
 
   const dataList = activeTab === 'posts' 

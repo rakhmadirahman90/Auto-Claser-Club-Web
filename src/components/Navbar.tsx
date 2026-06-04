@@ -33,6 +33,7 @@ export default function Navbar() {
         { name: 'Sejarah', href: '#sejarah' },
         { name: 'Struktur', href: '#struktur' },
         { name: 'Dokumen Resmi', href: '#dokumen' },
+        { name: 'Profil Anggota', href: '#member-profile' },
       ]
     },
     { name: 'Agenda', href: '#activities' },

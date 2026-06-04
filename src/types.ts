@@ -1,3 +1,14 @@
+export interface MemberProfile {
+  id: string;
+  name: string;
+  role: string;
+  imageUrl: string;
+  car: string;
+  licensePlate: string;
+  yearJoined: string;
+  membershipNumber: string;
+}
+
 export interface BlogPost {
   id: string;
   title: string;
