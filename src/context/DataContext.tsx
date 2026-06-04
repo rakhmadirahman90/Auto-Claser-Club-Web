@@ -63,6 +63,8 @@ interface DataContextType {
   addMemberProfile: (member: MemberProfile) => Promise<void>;
   updateMemberProfile: (id: string, member: MemberProfile) => Promise<void>;
   deleteMemberProfile: (id: string) => Promise<void>;
+  isAdminSession: boolean;
+  setIsAdminSession: (isAdmin: boolean) => void;
 }
 
 const DataContext = createContext<DataContextType | null>(null);
@@ -75,6 +77,7 @@ export const useData = () => {
 
 export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [isAdminSession, setIsAdminSession] = useState(localStorage.getItem('acc_admin_wa') === 'true');
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [activities, setActivities] = useState<Activity[]>([]);
   const [chapters, setChapters] = useState<Chapter[]>([]);
@@ -99,8 +102,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
 
     let unsubReg = () => {};
-    const isLocalAdmin = localStorage.getItem('acc_admin_wa') === 'true';
-    if (user && (user.email === "rakhmadi.rahman90@gmail.com" || user.email === "admin@autoclaserclub.com" || isLocalAdmin || user.isAnonymous)) {
+    if (isAdminSession || (user && (user.email === "rakhmadi.rahman90@gmail.com" || user.email === "admin@autoclaserclub.com" || user.isAnonymous))) {
       unsubReg = onSnapshot(collection(db, 'registrations'), snap => {
         setRegistrations(snap.docs.map(d => ({ id: d.id, ...d.data() } as Registration)));
       }, err => handleFirestoreError(err, OperationType.LIST, 'registrations'));
@@ -148,7 +150,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }, err => handleFirestoreError(err, OperationType.LIST, 'memberProfiles'));
 
     return () => { unsubPosts(); unsubActivities(); unsubChapters(); unsubHero(); unsubAbout(); unsubJoin(); unsubAnnouncement(); unsubReg(); unsubCommittee(); unsubMembers(); };
-  }, [user]);
+  }, [user, isAdminSession]);
 
   const addPost = async (post: BlogPost) => {
     const { id, ...data } = post;
@@ -323,6 +325,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   return (
     <DataContext.Provider value={{
       user, posts, activities, chapters, heroData, aboutData, joinData, announcementData, registrations, committee, memberProfiles,
+      isAdminSession, setIsAdminSession,
       addPost, updatePost, deletePost, likePost, viewPost,
       addActivity, updateActivity, deleteActivity,
       addChapter, updateChapter, deleteChapter,

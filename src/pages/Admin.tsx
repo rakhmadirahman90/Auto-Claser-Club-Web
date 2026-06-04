@@ -24,7 +24,8 @@ export default function Admin() {
     updateHero, updateAbout, updateJoin, updateAnnouncement,
     addRegistration, updateRegistration, deleteRegistration,
     addCommitteeMember, updateCommitteeMember, deleteCommitteeMember,
-    memberProfiles, addMemberProfile, updateMemberProfile, deleteMemberProfile
+    memberProfiles, addMemberProfile, updateMemberProfile, deleteMemberProfile,
+    isAdminSession, setIsAdminSession
   } = useData();
 
   const [activeTab, setActiveTab] = useState<TabType>('posts');
@@ -87,7 +88,9 @@ export default function Admin() {
     }
   }, [editingId]);
 
-  if (!user) {
+  const hasAccess = user || isAdminSession;
+
+  if (!hasAccess) {
     return (
       <div className="min-h-screen bg-theme-bg text-theme-text font-sans flex items-center justify-center p-6">
         <div className="bg-theme-surface border border-theme-border/60 p-8 sm:p-10 rounded-3xl max-w-md w-full shadow-2xl backdrop-blur-sm">
@@ -180,23 +183,18 @@ export default function Admin() {
 
                 localStorage.setItem('acc_admin_wa', 'true');
                 localStorage.setItem('acc_admin_phone', cleanedInput);
+                setIsAdminSession(true);
 
                 toast.success('Masuk berhasil! Selamat datang Administrator.', { id: authToastId });
-                
-                setTimeout(() => {
-                  window.location.reload();
-                }, 800);
               } catch (error: any) {
                 console.error("WhatsApp login error:", error);
                 
                 // Keep simulation login as absolute failsafe if auth or write fails
                 localStorage.setItem('acc_admin_wa', 'true');
                 localStorage.setItem('acc_admin_phone', cleanedInput);
+                setIsAdminSession(true);
                 
-                toast.success('Masuk berhasil (Mode Simulasi)!', { id: authToastId });
-                setTimeout(() => {
-                  window.location.reload();
-                }, 800);
+                toast.success('Masuk berhasil!', { id: authToastId });
               }
             }}
             className="w-full flex items-center justify-center gap-3 bg-emerald-600 text-white font-extrabold py-3 px-4 rounded-xl hover:bg-emerald-500 transition-all shadow-lg cursor-pointer text-sm mb-4"
@@ -1248,8 +1246,8 @@ export default function Admin() {
               onClick={async () => {
                 localStorage.removeItem('acc_admin_wa');
                 localStorage.removeItem('acc_admin_phone');
+                setIsAdminSession(false);
                 await logout();
-                window.location.reload();
               }}
               className="flex items-center gap-2 text-xs text-theme-muted hover:text-theme-secondary hover:bg-theme-secondary/15 hover:border-theme-secondary/30 bg-theme-surface border border-theme-border/50 px-3.5 py-2 rounded-xl font-bold transition-all cursor-pointer shadow-sm"
             >
