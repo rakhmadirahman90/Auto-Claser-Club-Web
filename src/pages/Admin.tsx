@@ -293,10 +293,16 @@ export default function Admin() {
         savePromise = updateMemberProfile(editingId, formData);
       }
     } else if (activeTab === 'calendar') {
+      const eventData = {
+        title: formData.title || '',
+        date: typeof formData.date === 'number' ? formData.date : (parseInt(formData.date, 10) || 1),
+        month: typeof formData.month === 'number' ? formData.month : (formData.month !== undefined ? parseInt(formData.month, 10) : 0),
+        type: formData.type || 'agenda'
+      };
       if (editingId === 'new') {
-        savePromise = addCalendarEvent({ ...formData, id: Date.now().toString() });
+        savePromise = addCalendarEvent({ ...eventData, id: Date.now().toString() });
       } else if (editingId) {
-        savePromise = updateCalendarEvent(editingId, formData);
+        savePromise = updateCalendarEvent(editingId, { ...eventData, id: editingId });
       }
     } else if (activeTab === 'hero') {
       savePromise = updateHero({ ...formData, id: 'hero' });

@@ -92,7 +92,7 @@ export interface CommitteeMember {
 }
 
 export interface CalendarEvent {
-  id: string;
+  id?: string;
   date: number; // 1-31
   month: number; // 0-11
   type: 'agenda' | 'birthday' | 'holiday';
