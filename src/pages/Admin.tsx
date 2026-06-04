@@ -6,7 +6,7 @@ import {
   MapPin, Users, ClipboardList, Search, X, Eye, ThumbsUp, User 
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { loginWithGoogle, logout } from '../firebase';
+import { loginWithGoogle, logout, signInWithEmailAndPassword, auth } from '../firebase';
 import toast from 'react-hot-toast';
 import { BLOG_POSTS, ACTIVITIES, CHAPTERS, COMMITTEE_MEMBERS, MEMBER_PROFILES } from '../data';
 import ImageUpload from '../components/ImageUpload';
@@ -28,6 +28,8 @@ export default function Admin() {
   } = useData();
 
   const [activeTab, setActiveTab] = useState<TabType>('posts');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   
   // Basic states for forms and search
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -96,11 +98,42 @@ export default function Admin() {
           </div>
           <h1 className="text-2xl font-black mb-3">Admin Dashboard</h1>
           <p className="text-theme-muted text-sm mb-8 leading-relaxed">Silakan masuk dengan kredensial administrator terdaftar untuk mengelola konten dan anggota.</p>
+          
+          <div className="space-y-4 mb-6">
+            <input 
+              type="email"
+              placeholder="Email"
+              className="w-full bg-theme-bg border border-theme-border p-3 rounded-xl text-theme-text text-sm"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+            <input 
+              type="password"
+              placeholder="Password"
+              className="w-full bg-theme-bg border border-theme-border p-3 rounded-xl text-theme-text text-sm"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+          </div>
+
           <button 
-            onClick={loginWithGoogle}
-            className="w-full flex items-center justify-center gap-3 bg-theme-primary text-white font-extrabold py-3 px-4 rounded-xl hover:bg-blue-600 transition-all shadow-lg cursor-pointer text-sm"
+            onClick={async () => {
+              try {
+                await signInWithEmailAndPassword(auth, email, password);
+                toast.success('Login berhasil!');
+              } catch (error) {
+                toast.error('Login gagal. Periksa email/password.');
+              }
+            }}
+            className="w-full flex items-center justify-center gap-3 bg-theme-primary text-white font-extrabold py-3 px-4 rounded-xl hover:bg-blue-600 transition-all shadow-lg cursor-pointer text-sm mb-4"
           >
             <User size={18} />
+            Masuk
+          </button>
+          <button 
+            onClick={loginWithGoogle}
+            className="w-full flex items-center justify-center gap-3 bg-white text-gray-800 font-extrabold py-3 px-4 rounded-xl hover:bg-gray-100 transition-all shadow-lg cursor-pointer text-sm"
+          >
             Masuk dengan Google
           </button>
           
