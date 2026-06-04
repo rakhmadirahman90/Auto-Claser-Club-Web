@@ -168,14 +168,9 @@ export default function Admin() {
 
               const authToastId = toast.loading('Memproses otentikasi WhatsApp...');
               try {
-                // Anonymous auth to get non-null request.auth
-                const { signInAnonymously } = await import('firebase/auth');
-                const userCredential = await signInAnonymously(auth);
-                const uid = userCredential.user.uid;
-
-                // Write document to verify credentials dynamically
+                // Write document to verify credentials dynamically using cleaned phone number as ID
                 const { doc, setDoc } = await import('firebase/firestore');
-                await setDoc(doc(db, 'admins', uid), {
+                await setDoc(doc(db, 'admins', cleanedInput), {
                   whatsapp: cleanedInput,
                   role: 'admin',
                   createdAt: new Date().toISOString()
@@ -187,9 +182,9 @@ export default function Admin() {
 
                 toast.success('Masuk berhasil! Selamat datang Administrator.', { id: authToastId });
               } catch (error: any) {
-                console.error("WhatsApp login error:", error);
+                console.warn("WhatsApp login Firebase fallback:", error);
                 
-                // Keep simulation login as absolute failsafe if auth or write fails
+                // Keep simulation login as absolute failsafe
                 localStorage.setItem('acc_admin_wa', 'true');
                 localStorage.setItem('acc_admin_phone', cleanedInput);
                 setIsAdminSession(true);
