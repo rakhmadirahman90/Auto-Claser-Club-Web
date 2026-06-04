@@ -87,22 +87,26 @@ export default function Admin() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-theme-bg text-theme-text font-sans flex items-center justify-center p-4">
-        <div className="bg-theme-surface border border-theme-border/60 p-8 rounded-3xl max-w-md w-full text-center shadow-2xl">
+      <div className="min-h-screen bg-theme-bg text-theme-text font-sans flex items-center justify-center p-6">
+        <div className="bg-theme-surface border border-theme-border/60 p-10 rounded-3xl max-w-sm w-full text-center shadow-2xl backdrop-blur-sm">
           <div className="flex justify-center mb-6">
-            <img src="/logo.jpg" alt="ACC Logo" className="h-20 w-auto object-contain" />
+            <div className="p-3 bg-theme-bg rounded-2xl border border-theme-border/50">
+              <img src="/logo.jpg" alt="ACC Logo" className="h-16 w-auto object-contain" />
+            </div>
           </div>
-          <h1 className="text-2xl font-black mb-2">Admin Dashboard</h1>
-          <p className="text-theme-muted text-sm mb-8 leading-relaxed">Silakan login dengan akun admin terdaftar Anda untuk mengakses pengelolaan aplikasi Auto Claser Club.</p>
+          <h1 className="text-2xl font-black mb-3">Admin Dashboard</h1>
+          <p className="text-theme-muted text-sm mb-8 leading-relaxed">Silakan masuk dengan kredensial administrator terdaftar untuk mengelola konten dan anggota.</p>
           <button 
             onClick={loginWithGoogle}
-            className="w-full bg-theme-primary text-white font-extrabold py-3 px-4 rounded-xl hover:bg-blue-600 transition-all shadow-lg shadow-theme-primary/10 cursor-pointer text-sm"
+            className="w-full flex items-center justify-center gap-3 bg-theme-primary text-white font-extrabold py-3 px-4 rounded-xl hover:bg-blue-600 transition-all shadow-lg cursor-pointer text-sm"
           >
-            Masuk dengan Google Auth
+            <User size={18} />
+            Masuk dengan Google
           </button>
-          <div className="mt-8 border-t border-theme-border/50 pt-4">
-            <Link to="/" className="text-theme-muted hover:text-theme-primary transition-colors text-xs font-semibold">
-              &larr; Kembali ke Beranda Utama
+          
+          <div className="mt-8 pt-6 border-t border-theme-border/50">
+            <Link to="/" className="text-theme-muted hover:text-theme-primary transition-colors text-xs font-semibold flex items-center justify-center gap-2">
+              <ArrowLeft size={14} /> Kembali ke Beranda
             </Link>
           </div>
         </div>
