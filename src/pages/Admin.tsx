@@ -3,7 +3,7 @@ import { useData } from '../context/DataContext';
 import { 
   Plus, Edit2, Trash2, ArrowLeft, LogOut, Database, 
   Home, Info, UserPlus, Bell, FileText, Calendar, 
-  MapPin, Users, ClipboardList, Search, X, Eye, ThumbsUp, User 
+  MapPin, Users, ClipboardList, Search, X, Eye, EyeOff, ThumbsUp, User 
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { logout, auth, db } from '../firebase';
@@ -31,6 +31,7 @@ export default function Admin() {
   const [activeTab, setActiveTab] = useState<TabType>('posts');
   const [whatsapp, setWhatsapp] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   
   // Basic states for forms and search
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -123,13 +124,22 @@ export default function Admin() {
 
             <div>
               <label className="block text-[11px] font-bold tracking-wider text-theme-muted uppercase mb-1.5">Password Sandi Admin</label>
-              <input 
-                type="password"
-                placeholder="Masukkan password admin"
-                className="w-full bg-theme-bg border border-theme-border p-3 rounded-xl text-theme-text text-sm focus:outline-none focus:ring-2 focus:ring-theme-primary/30 focus:border-theme-primary transition-all font-mono"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
+              <div className="relative">
+                <input 
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Masukkan password admin"
+                  className="w-full bg-theme-bg border border-theme-border p-3 rounded-xl text-theme-text text-sm focus:outline-none focus:ring-2 focus:ring-theme-primary/30 focus:border-theme-primary transition-all font-mono pr-12"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+                <button 
+                  type="button" 
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-theme-muted hover:text-theme-primary"
+                >
+                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
             </div>
           </div>
 
