@@ -38,20 +38,36 @@ export default function Admin() {
   // Auto-load hero/about data into form when the tab is clicked
   useEffect(() => {
     if (activeTab === 'hero') {
-      setFormData(heroData || { title: '', subtitle: '', description: '', imageUrl: '' });
+      setFormData({
+        title: heroData?.title || 'Satu Aspal,\nSatu Keluarga.',
+        subtitle: heroData?.subtitle || 'Solidaritas Tanpa Batas',
+        description: heroData?.description || 'Selamat datang di website resmi Auto Claser Club. Rumah bagi para pecinta otomotif, berbagi informasi, modifikasi, dan persaudaraan nyata.',
+        imageUrl: heroData?.imageUrl || "https://images.unsplash.com/photo-1549399542-7e3f8b79c341?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80\nhttps://images.unsplash.com/photo-1511919884226-fd3cad34687c?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80\nhttps://images.unsplash.com/photo-1503370321287-320dcf7366d4?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80"
+      });
       setEditingId('hero');
     } else if (activeTab === 'about') {
-      setFormData(aboutData || { title: '', description1: '', description2: '', statsMembers: '', imageUrl: '' });
+      setFormData({
+        title: aboutData?.title || 'Tentang Auto Claser Club',
+        description1: aboutData?.description1 || 'Auto Claser Club (ACC) adalah komunitas otomotif yang mewadahi para pemilik dan pecinta mobil. Berdiri atas dasar kesamaan hobi dan kecintaan terhadap dunia otomotif, ACC berkembang menjadi lebih dari sekadar klub mobil; kami adalah keluarga kedua bagi anggotanya.',
+        description2: aboutData?.description2 || 'Dengan ribuan member yang tersebar di berbagai wilayah nusantara, kami aktif mengadakan berbagai kegiatan positif mulai dari kopi darat (kopdar), touring, kegiatan sosial, hingga edukasi keselamatan berkendara bersama instansi terkait.',
+        statsMembers: aboutData?.statsMembers || '500+',
+        imageUrl: aboutData?.imageUrl || 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&q=80&w=1000'
+      });
       setEditingId('about');
     } else if (activeTab === 'join') {
-      setFormData(joinData || { title: '', description: '', adminWhatsApp: '6289616746342', imageUrl: '' });
+      setFormData({
+        title: joinData?.title || 'Bergabung Bersama Kami',
+        description: joinData?.description || 'Isi formulir pendaftaran di bawah ini untuk menjadi bagian dari keluarga besar Auto Claser Club. Admin kami akan segera memproses pendaftaran Anda.',
+        adminWhatsApp: joinData?.adminWhatsApp || '6289616746342',
+        imageUrl: joinData?.imageUrl || 'https://images.unsplash.com/photo-1503370321287-320dcf7366d4?auto=format&fit=crop&q=80&w=1000'
+      });
       setEditingId('join');
     } else if (activeTab === 'announcement') {
-      setFormData(announcementData || { 
-        isActive: true, 
-        title: '🎉 Kopdar Akbar Auto Claser Club 2026', 
-        content: 'Halo member ACC!\n\nJangan lewatkan **Kopdar Akbar** yang akan diselenggarakan akhir bulan ini. Acara ini wajib dihadiri oleh seluruh chapter. \n\n**Detail Acara:**\n- Tanggal: Sabtu, 27 Juni 2026\n- Lokasi: Gunung Mas, Puncak Bogor\n- Waktu: 08.00 WIB - Selesai\n\nSiapkan kendaraanmu dan gunakan seragam resmi ACC. *Solidarity Forever!*', 
-        imageUrl: 'https://images.unsplash.com/photo-1511919884226-fd3cad34687c?auto=format&fit=crop&q=80&w=1000' 
+      setFormData({ 
+        isActive: announcementData?.isActive ?? true, 
+        title: announcementData?.title || '🎉 Kopdar Akbar Auto Claser Club 2026', 
+        content: announcementData?.content || 'Halo member ACC!\n\nJangan lewatkan **Kopdar Akbar** yang akan diselenggarakan akhir bulan ini. Acara ini wajib dihadiri oleh seluruh chapter. \n\n**Detail Acara:**\n- Tanggal: Sabtu, 27 Juni 2026\n- Lokasi: Gunung Mas, Puncak Bogor\n- Waktu: 08.00 WIB - Selesai\n\nSiapkan kendaraanmu dan gunakan seragam resmi ACC. *Solidarity Forever!*', 
+        imageUrl: announcementData?.imageUrl || 'https://images.unsplash.com/photo-1511919884226-fd3cad34687c?auto=format&fit=crop&q=80&w=1000' 
       });
       setEditingId('announcement');
     } else {
@@ -360,8 +376,55 @@ export default function Admin() {
             <textarea className="w-full bg-theme-bg border border-theme-border p-3 rounded-xl text-theme-text text-sm focus:outline-none focus:ring-2 focus:ring-theme-primary/30 focus:border-theme-primary transition-all duration-200 min-h-32" placeholder="Tuliskan deskripsi utama pencitraan klub otomotif ACC di halaman depan..." value={formData.description || ''} onChange={e => setFormData({...formData, description: e.target.value})} />
           </div>
           <div>
-            <label className="block text-xs font-bold tracking-wider text-theme-muted uppercase mb-1.5">Gambar Background Utama (Hero Wallpaper)</label>
-            <ImageUpload value={formData.imageUrl || ''} onChange={url => setFormData({...formData, imageUrl: url})} />
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="block text-xs font-bold tracking-wider text-theme-muted uppercase">Daftar Gambar Slider Utama</label>
+              <button 
+                onClick={(e) => {
+                  e.preventDefault();
+                  const urls = Array.isArray(formData.imageUrl) ? formData.imageUrl : typeof formData.imageUrl === 'string' ? formData.imageUrl.split(/[\n,]/).map((u: string) => u.trim()).filter(Boolean) : [];
+                  urls.push('');
+                  setFormData({...formData, imageUrl: urls.join('\n')});
+                }}
+                className="text-[10px] bg-theme-primary/10 text-theme-primary px-2 py-1 flex items-center justify-center gap-1 rounded font-bold hover:bg-theme-primary hover:text-white transition-colors"
+                type="button"
+              >
+                <Plus size={12} /> Tambah Foto
+              </button>
+            </div>
+            <div className="space-y-3">
+              {(typeof formData.imageUrl === 'string' ? formData.imageUrl.split(/[\n,]/).map((u: string) => u.trim()).filter(Boolean) : []).map((url: string, idx: number, arr: string[]) => (
+                <div key={idx} className="p-3 bg-theme-bg border border-theme-border rounded-xl space-y-2 relative shadow-sm">
+                  <div className="flex justify-between items-center pb-2 border-b border-theme-border/50">
+                    <span className="text-[10px] font-bold text-theme-muted uppercase tracking-wider">Slide {idx + 1}</span>
+                    <button 
+                      onClick={(e) => {
+                        e.preventDefault();
+                        const newArr = [...arr];
+                        newArr.splice(idx, 1);
+                        setFormData({...formData, imageUrl: newArr.join('\n')});
+                      }}
+                      className="text-red-500 hover:text-red-600 bg-red-500/10 hover:bg-red-500/20 rounded p-1 flex items-center justify-center"
+                      type="button"
+                    >
+                      <Trash2 size={12} />
+                    </button>
+                  </div>
+                  <ImageUpload value={url} onChange={newUrl => {
+                    const newArr = [...arr];
+                    newArr[idx] = newUrl;
+                    setFormData({...formData, imageUrl: newArr.join('\n')});
+                  }} />
+                </div>
+              ))}
+              {(!formData.imageUrl || typeof formData.imageUrl !== 'string' || formData.imageUrl.trim() === '') && (
+                <div className="p-3 bg-theme-bg border border-theme-border rounded-xl space-y-2 relative shadow-sm">
+                    <span className="text-[10px] font-bold text-theme-muted uppercase tracking-wider block mb-2 pb-2 border-b border-theme-border/50">Slide 1</span>
+                    <ImageUpload value="" onChange={newUrl => {
+                      setFormData({...formData, imageUrl: newUrl});
+                    }} />
+                </div>
+              )}
+            </div>
           </div>
         </div>
       );

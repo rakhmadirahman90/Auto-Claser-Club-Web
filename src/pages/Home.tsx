@@ -68,8 +68,8 @@ export default function Home() {
             </motion.div>
           </AnimatePresence>
         </div>
-        <Footer />
       </main>
+      <Footer />
     </div>
   );
 }
