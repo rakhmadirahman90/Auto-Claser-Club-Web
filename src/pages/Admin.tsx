@@ -118,11 +118,31 @@ export default function Admin() {
 
           <button 
             onClick={async () => {
+              if (!email || !password) {
+                toast.error('Bordir email dan password wajib diisi');
+                return;
+              }
               try {
                 await signInWithEmailAndPassword(auth, email, password);
                 toast.success('Login berhasil!');
-              } catch (error) {
-                toast.error('Login gagal. Periksa email/password.');
+              } catch (error: any) {
+                console.error("Login error:", error);
+                
+                // Auto-create admin account if it doesn't exist yet and matches admin emails
+                if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found') {
+                  if (email === 'admin@autoclaserclub.com' || email === 'rakhmadi.rahman90@gmail.com') {
+                    try {
+                      await createUserWithEmailAndPassword(auth, email, password);
+                      toast.success('Akun admin berhasil dibuat dan Anda telah masuk!');
+                      return;
+                    } catch (createError: any) {
+                      toast.error(`Gagal membuat akun admin: ${createError.message}`);
+                      return;
+                    }
+                  }
+                }
+                
+                toast.error(`Login gagal: ${error.message || 'Periksa kembali email dan password.'}`);
               }
             }}
             className="w-full flex items-center justify-center gap-3 bg-theme-primary text-white font-extrabold py-3 px-4 rounded-xl hover:bg-blue-600 transition-all shadow-lg cursor-pointer text-sm mb-4"

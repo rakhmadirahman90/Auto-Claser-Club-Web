@@ -99,7 +99,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
 
     let unsubReg = () => {};
-    if (user && user.email === "rakhmadi.rahman90@gmail.com") {
+    if (user && (user.email === "rakhmadi.rahman90@gmail.com" || user.email === "admin@autoclaserclub.com")) {
       unsubReg = onSnapshot(collection(db, 'registrations'), snap => {
         setRegistrations(snap.docs.map(d => ({ id: d.id, ...d.data() } as Registration)));
       }, err => handleFirestoreError(err, OperationType.LIST, 'registrations'));

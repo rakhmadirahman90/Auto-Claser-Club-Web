@@ -5,7 +5,11 @@ service cloud.firestore {
     
     function isSignedIn() { return request.auth != null && request.auth.token.email_verified == true; }
     function isAdmin() { 
-      return request.auth != null && (request.auth.token.email == "rakhmadi.rahman90@gmail.com" || exists(/databases/$(database)/documents/admins/$(request.auth.uid))); 
+      return request.auth != null && (
+        request.auth.token.email == "rakhmadi.rahman90@gmail.com" || 
+        request.auth.token.email == "admin@autoclaserclub.com" || 
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+      ); 
     }
     function isValidId(id) { return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_-]+$'); }
     function incoming() { return request.resource.data; }
