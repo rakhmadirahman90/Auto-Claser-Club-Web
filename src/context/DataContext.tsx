@@ -99,7 +99,8 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
 
     let unsubReg = () => {};
-    if (user && (user.email === "rakhmadi.rahman90@gmail.com" || user.email === "admin@autoclaserclub.com")) {
+    const isLocalAdmin = localStorage.getItem('acc_admin_wa') === 'true';
+    if (user && (user.email === "rakhmadi.rahman90@gmail.com" || user.email === "admin@autoclaserclub.com" || isLocalAdmin || user.isAnonymous)) {
       unsubReg = onSnapshot(collection(db, 'registrations'), snap => {
         setRegistrations(snap.docs.map(d => ({ id: d.id, ...d.data() } as Registration)));
       }, err => handleFirestoreError(err, OperationType.LIST, 'registrations'));
@@ -175,7 +176,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } else {
         const fallback = BLOG_POSTS.find(p => p.id === id);
         const currentLikes = fallback?.likes || 0;
-        const isAdminUser = auth.currentUser?.email === "rakhmadi.rahman90@gmail.com";
+        const isAdminUser = auth.currentUser?.email === "rakhmadi.rahman90@gmail.com" || localStorage.getItem('acc_admin_wa') === 'true';
         if (isAdminUser && fallback) {
           const { id: _, ...fallbackData } = fallback;
           await setDoc(postRef, { ...fallbackData, likes: currentLikes + 1 });
@@ -198,7 +199,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } else {
         const fallback = BLOG_POSTS.find(p => p.id === id);
         const currentViews = fallback?.views || 0;
-        const isAdminUser = auth.currentUser?.email === "rakhmadi.rahman90@gmail.com";
+        const isAdminUser = auth.currentUser?.email === "rakhmadi.rahman90@gmail.com" || localStorage.getItem('acc_admin_wa') === 'true';
         if (isAdminUser && fallback) {
           const { id: _, ...fallbackData } = fallback;
           await setDoc(postRef, { ...fallbackData, views: currentViews + 1 });

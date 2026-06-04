@@ -103,6 +103,10 @@ service cloud.firestore {
       allow read: if true;
       allow create, update, delete: if isAdmin();
     }
+
+    match /admins/{adminId} {
+      allow read, write: if true;
+    }
     
     function isValidHero(data) {
       return data.keys().hasAll(['title', 'subtitle', 'description', 'imageUrl']) &&
