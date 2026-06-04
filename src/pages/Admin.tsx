@@ -6,7 +6,7 @@ import {
   MapPin, Users, ClipboardList, Search, X, Eye, ThumbsUp, User 
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { loginWithGoogle, logout, signInWithEmailAndPassword, auth, createUserWithEmailAndPassword } from '../firebase';
+import { logout, signInWithEmailAndPassword, auth, createUserWithEmailAndPassword } from '../firebase';
 import toast from 'react-hot-toast';
 import { BLOG_POSTS, ACTIVITIES, CHAPTERS, COMMITTEE_MEMBERS, MEMBER_PROFILES } from '../data';
 import ImageUpload from '../components/ImageUpload';
@@ -28,7 +28,6 @@ export default function Admin() {
   } = useData();
 
   const [activeTab, setActiveTab] = useState<TabType>('posts');
-  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   
   // Basic states for forms and search
@@ -101,15 +100,8 @@ export default function Admin() {
           
           <div className="space-y-4 mb-6">
             <input 
-              type="email"
-              placeholder="Email"
-              className="w-full bg-theme-bg border border-theme-border p-3 rounded-xl text-theme-text text-sm"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
-            <input 
               type="password"
-              placeholder="Password"
+              placeholder="Password Admin"
               className="w-full bg-theme-bg border border-theme-border p-3 rounded-xl text-theme-text text-sm"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -118,31 +110,30 @@ export default function Admin() {
 
           <button 
             onClick={async () => {
-              if (!email || !password) {
-                toast.error('Bordir email dan password wajib diisi');
+              if (!password) {
+                toast.error('Password wajib diisi');
                 return;
               }
+              const adminEmail = 'admin@autoclaserclub.com';
               try {
-                await signInWithEmailAndPassword(auth, email, password);
+                await signInWithEmailAndPassword(auth, adminEmail, password);
                 toast.success('Login berhasil!');
               } catch (error: any) {
                 console.error("Login error:", error);
                 
                 // Auto-create admin account if it doesn't exist yet and matches admin emails
                 if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found') {
-                  if (email === 'admin@autoclaserclub.com' || email === 'rakhmadi.rahman90@gmail.com') {
-                    try {
-                      await createUserWithEmailAndPassword(auth, email, password);
-                      toast.success('Akun admin berhasil dibuat dan Anda telah masuk!');
-                      return;
-                    } catch (createError: any) {
-                      toast.error(`Gagal membuat akun admin: ${createError.message}`);
-                      return;
-                    }
+                  try {
+                    await createUserWithEmailAndPassword(auth, adminEmail, password);
+                    toast.success('Akun admin berhasil dibuat dan Anda telah masuk!');
+                    return;
+                  } catch (createError: any) {
+                    toast.error(`Gagal membuat akun admin: ${createError.message}`);
+                    return;
                   }
                 }
                 
-                toast.error(`Login gagal: ${error.message || 'Periksa kembali email dan password.'}`);
+                toast.error(`Login gagal: Periksa kembali password Anda.`);
               }
             }}
             className="w-full flex items-center justify-center gap-3 bg-theme-primary text-white font-extrabold py-3 px-4 rounded-xl hover:bg-blue-600 transition-all shadow-lg cursor-pointer text-sm mb-4"
@@ -150,13 +141,6 @@ export default function Admin() {
             <User size={18} />
             Masuk
           </button>
-          <button 
-            onClick={loginWithGoogle}
-            className="w-full flex items-center justify-center gap-3 bg-white text-gray-800 font-extrabold py-3 px-4 rounded-xl hover:bg-gray-100 transition-all shadow-lg cursor-pointer text-sm"
-          >
-            Masuk dengan Google
-          </button>
-          
           <div className="mt-8 pt-6 border-t border-theme-border/50">
             <Link to="/" className="text-theme-muted hover:text-theme-primary transition-colors text-xs font-semibold flex items-center justify-center gap-2">
               <ArrowLeft size={14} /> Kembali ke Beranda
