@@ -351,7 +351,7 @@ export default function Admin() {
         id: Date.now().toString(),
         name: reg.name || 'Anggota Baru',
         role: 'Anggota Resmi',
-        imageUrl: '',
+        imageUrl: reg.photo || '',
         car: reg.vehicleType || 'Belum diatur',
         licensePlate: reg.licensePlate || 'Belum diatur',
         yearJoined: new Date().getFullYear().toString(),
@@ -752,6 +752,10 @@ export default function Admin() {
           <div>
             <label className="block text-xs font-bold tracking-wider text-theme-muted uppercase mb-1.5 font-bold">Alamat / Domisili Lengkap</label>
             <textarea className="w-full bg-theme-bg border border-theme-border p-3 rounded-xl text-theme-text text-sm focus:outline-none focus:ring-2 focus:ring-theme-primary/30 focus:border-theme-primary transition-all duration-200 min-h-20" placeholder="Alamat domisili lengkap..." value={formData.address || ''} onChange={e => setFormData({...formData, address: e.target.value})} />
+          </div>
+          <div>
+            <label className="block text-xs font-bold tracking-wider text-theme-muted uppercase mb-1.5 font-bold">Foto Pendaftar / Kendaraan (Opsional)</label>
+            <ImageUpload value={formData.photo || ''} onChange={url => setFormData({...formData, photo: url})} />
           </div>
         </div>
       );
@@ -1184,7 +1188,11 @@ export default function Admin() {
             );
           } else if (activeTab === 'registrations') {
             subtitle = `${item.vehicleType || ''} • ${item.phone || ''}`;
-            avatarDisplay = (
+            avatarDisplay = item.photo && item.photo.trim() !== '' ? (
+              <div className="h-10 w-10 rounded-xl overflow-hidden shrink-0 border border-theme-border/50 bg-theme-bg/40 flex items-center justify-center">
+                <img src={item.photo} alt="" className="h-full w-full object-cover" referrerPolicy="no-referrer" />
+              </div>
+            ) : (
                 <div className="h-10 w-10 shrink-0 rounded-xl bg-gradient-to-br from-blue-500/10 to-cyan-500/15 text-blue-600 flex items-center justify-center font-black text-xs">
                   {item.name.substring(0, 2).toUpperCase()}
                 </div>
@@ -1515,6 +1523,42 @@ export default function Admin() {
             
             {/* List Sidebar (Shows only when not editing on mobile) */}
             <div className={`md:col-span-5 lg:col-span-4 space-y-4 w-full min-w-0 ${editingId ? 'hidden md:block' : 'block'}`}>
+              
+              {/* Member Profile Statistics */}
+              {activeTab === 'profile' && (
+                <div className="bg-theme-surface border border-theme-border rounded-xl p-4 shadow-sm mb-4">
+                  <h3 className="text-xs font-black uppercase text-theme-primary tracking-widest mb-3 flex items-center gap-2">
+                    <Users size={14} /> Statistik Anggota
+                  </h3>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="bg-theme-bg p-3 rounded-lg border border-theme-border text-center flex flex-col justify-center">
+                      <p className="text-2xl font-black text-theme-text leading-none">{dataList.length}</p>
+                      <p className="text-[10px] text-theme-muted font-bold mt-1 uppercase tracking-wider">Total Anggota</p>
+                    </div>
+                    <div className="bg-theme-bg p-3 rounded-lg border border-theme-border text-center flex flex-col justify-center">
+                      {/* Count unique car models */}
+                      <p className="text-2xl font-black text-theme-text leading-none">{[...new Set(dataList.filter((m: any) => m.car && m.car.trim() !== '' && m.car !== 'Belum diatur').map((m: any) => m.car?.toLowerCase().trim()))].length}</p>
+                      <p className="text-[10px] text-theme-muted font-bold mt-1 uppercase tracking-wider">Varian Mobil</p>
+                    </div>
+                    <div className="bg-theme-bg p-3 rounded-lg border border-theme-border text-center flex flex-col justify-center">
+                      <p className="text-2xl font-black text-theme-text leading-none">{dataList.filter((m: any) => m.yearJoined === new Date().getFullYear().toString()).length}</p>
+                      <p className="text-[10px] text-theme-muted font-bold mt-1 uppercase tracking-wider">Anggota Baru</p>
+                    </div>
+                    <div className="bg-theme-bg p-3 rounded-lg border border-theme-border text-center flex flex-col justify-center">
+                      <p className="text-xl font-black text-theme-text leading-none truncate px-1">
+                        {
+                          (Object.entries(dataList.reduce((acc: any, curr: any) => {
+                            if (curr.yearJoined) acc[curr.yearJoined] = (acc[curr.yearJoined] || 0) + 1;
+                            return acc;
+                          }, {})).sort((a: any, b: any) => b[1] - a[1])[0] || ['-'])[0]
+                        }
+                      </p>
+                      <p className="text-[10px] text-theme-muted font-bold mt-1 uppercase tracking-wider">Tahun Teramai</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               <div className="flex flex-col sm:flex-row md:flex-col gap-3 items-stretch w-full min-w-0">
                 <button 
                   onClick={() => handleEdit('new', {})}

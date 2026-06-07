@@ -72,6 +72,7 @@ export interface Registration {
   vehicleType: string;
   vehicleYear: string;
   licensePlate: string;
+  photo?: string;
   createdAt: string;
 }
 
