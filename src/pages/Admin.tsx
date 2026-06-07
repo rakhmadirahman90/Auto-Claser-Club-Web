@@ -35,6 +35,16 @@ export default function Admin() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   
+  // Custom Confirmation Dialog State
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    actionLabel?: string;
+    isDanger?: boolean;
+    onConfirm: () => void;
+  } | null>(null);
+  
   // Basic states for forms and search
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState<any>({});
@@ -326,21 +336,34 @@ export default function Admin() {
   };
 
   const handleDelete = async (id: string) => {    
-    if (!window.confirm('Apakah Anda yakin ingin menghapus data ini secara permanen?')) return;
-    
-    let deletePromise: Promise<any> = Promise.resolve();
-    if (activeTab === 'posts') deletePromise = deletePost(id);
-    if (activeTab === 'activities') deletePromise = deleteActivity(id);
-    if (activeTab === 'chapters') deletePromise = deleteChapter(id);
-    if (activeTab === 'committee') deletePromise = deleteCommitteeMember(id);
-    if (activeTab === 'registrations') deletePromise = deleteRegistration(id);
-    if (activeTab === 'profile') deletePromise = deleteMemberProfile(id);
-    if (activeTab === 'calendar') deletePromise = deleteCalendarEvent(id);
+    setConfirmModal({
+      isOpen: true,
+      title: 'Konfirmasi Penghapusan',
+      message: 'Apakah Anda yakin ingin menghapus data ini secara permanen dari database/Firestore?',
+      actionLabel: 'Hapus Permanen',
+      isDanger: true,
+      onConfirm: () => {
+        let deletePromise: Promise<any> = Promise.resolve();
+        if (activeTab === 'posts') deletePromise = deletePost(id);
+        if (activeTab === 'activities') deletePromise = deleteActivity(id);
+        if (activeTab === 'chapters') deletePromise = deleteChapter(id);
+        if (activeTab === 'committee') deletePromise = deleteCommitteeMember(id);
+        if (activeTab === 'registrations') deletePromise = deleteRegistration(id);
+        if (activeTab === 'profile') deletePromise = deleteMemberProfile(id);
+        if (activeTab === 'calendar') deletePromise = deleteCalendarEvent(id);
 
-    toast.promise(deletePromise, {
-      loading: 'Menghapus data...',
-      success: 'Data sukses terhapus!',
-      error: 'Gagal menghapus data dari Firestore.'
+        // If the item currently being edited is deleted, reset the editor state instantly
+        if (editingId === id) {
+          setEditingId(null);
+          setFormData({});
+        }
+
+        toast.promise(deletePromise, {
+          loading: 'Menghapus data...',
+          success: 'Data sukses terhapus!',
+          error: 'Gagal menghapus data dari Firestore.'
+        });
+      }
     });
   };
 
@@ -423,34 +446,41 @@ export default function Admin() {
   };
 
   const handleSeedData = async () => {    
-    if (!window.confirm('Ingin mengisi data awal (berita, agenda, chapter, & pengurus)? Tindakan ini berguna demi demo aplikasi pertama kali dan hanya akan mengisi bagian data yang masih kosong.')) return;
-    const seedPromise = (async () => {
-      const allPromises = [];
-      if (posts.length === 0) {
-        BLOG_POSTS.forEach(p => allPromises.push(addPost(p)));
-      }
-      if (activities.length === 0) {
-        ACTIVITIES.forEach(a => allPromises.push(addActivity(a)));
-      }
-      if (chapters.length === 0) {
-        CHAPTERS.forEach(c => allPromises.push(addChapter(c)));
-      }
-      if (committee.length === 0) {
-        COMMITTEE_MEMBERS.forEach(m => allPromises.push(addCommitteeMember(m)));
-      }
-      if (memberProfiles.length === 0) {
-        MEMBER_PROFILES.forEach(m => allPromises.push(addMemberProfile(m)));
-      }
-      if (calendarEvents.length === 0) {
-        CALENDAR_EVENTS.forEach(e => allPromises.push(addCalendarEvent(e)));
-      }
-      await Promise.all(allPromises);
-    })();
+    setConfirmModal({
+      isOpen: true,
+      title: 'Inisialisasi Data Awal',
+      message: 'Ingin mengisi data awal (berita, agenda, chapter, & pengurus)? Tindakan ini berguna demi demo aplikasi pertama kali dan hanya akan mengisi bagian data yang masih kosong.',
+      actionLabel: 'Ya, Isi Data',
+      onConfirm: () => {
+        const seedPromise = (async () => {
+          const allPromises = [];
+          if (posts.length === 0) {
+            BLOG_POSTS.forEach(p => allPromises.push(addPost(p)));
+          }
+          if (activities.length === 0) {
+            ACTIVITIES.forEach(a => allPromises.push(addActivity(a)));
+          }
+          if (chapters.length === 0) {
+            CHAPTERS.forEach(c => allPromises.push(addChapter(c)));
+          }
+          if (committee.length === 0) {
+            COMMITTEE_MEMBERS.forEach(m => allPromises.push(addCommitteeMember(m)));
+          }
+          if (memberProfiles.length === 0) {
+            MEMBER_PROFILES.forEach(m => allPromises.push(addMemberProfile(m)));
+          }
+          if (calendarEvents.length === 0) {
+            CALENDAR_EVENTS.forEach(e => allPromises.push(addCalendarEvent(e)));
+          }
+          await Promise.all(allPromises);
+        })();
 
-    toast.promise(seedPromise, {
-      loading: 'Sedang mengisi data...',
-      success: 'Semua data awal berhasil ditambahkan!',
-      error: 'Gagal melakukan seed data.'
+        toast.promise(seedPromise, {
+          loading: 'Sedang mengisi data...',
+          success: 'Semua data awal berhasil ditambahkan!',
+          error: 'Gagal melakukan seed data.'
+        });
+      }
     });
   };
 
@@ -1390,7 +1420,35 @@ export default function Admin() {
     : activeTab === 'activities' 
       ? [...ACTIVITIES.filter(s => !activities.find(f => f.id === s.id)), ...activities]
       : activeTab === 'committee' 
-        ? [...COMMITTEE_MEMBERS.filter(s => !committee.find(f => f.id === s.id)), ...committee]
+        ? (() => {
+            const list = [...COMMITTEE_MEMBERS.filter(s => !committee.find(f => f.id === s.id)), ...committee].filter(m => !m.isDeleted);
+            const getRoleRank = (roleStr: string): number => {
+              const r = (roleStr || '').toLowerCase();
+              if (r.includes('pembina')) return 1;
+              if (r.includes('penasehat') || r.includes('penasihat')) return 2;
+              if ((r.includes('ketua') && (r.includes('umum') || r.includes('pusat') || r.includes('nasional'))) || r.includes('president') || r.startsWith('ketum')) {
+                if (r.includes('wakil') || r.includes('vice')) return 5;
+                return 3;
+              }
+              if (r.includes('ketua harian')) return 4;
+              if (r.includes('wakil ketua') || r.includes('vice president') || r.includes('waketum') || r.includes('wakil ketua harian')) return 5;
+              if (r.includes('sekretaris') || r.includes('sekertaris') || r.includes('sekjen') || r.includes('secretary')) return 6;
+              if (r.includes('bendahara') || r.includes('treasurer')) return 7;
+              if (r.includes('korwil') || r.includes('koordinator wilayah')) return 8;
+              if (r.includes('divisi') || r.includes('devisi') || r.includes('bidang') || r.includes('departemen') || r.includes('koordinator') || r.includes('seksi') || r.includes('kabid')) return 9;
+              if (r.includes('anggota') || r.includes('member')) return 11;
+              return 10;
+            };
+            return list.sort((a, b) => {
+              const rankA = getRoleRank(a.role);
+              const rankB = getRoleRank(b.role);
+              if (rankA !== rankB) return rankA - rankB;
+              const orderA = a.displayOrder ?? 99;
+              const orderB = b.displayOrder ?? 99;
+              if (orderA !== orderB) return orderA - orderB;
+              return a.name.localeCompare(b.name);
+            });
+          })()
         : activeTab === 'chapters'
           ? [...CHAPTERS.filter(s => !chapters.find(f => f.id === s.id)), ...chapters]
           : activeTab === 'profile'
@@ -1566,6 +1624,39 @@ export default function Admin() {
                 >
                   <Plus size={16} /> Tambah Data Baru
                 </button>
+
+                {activeTab === 'committee' && (
+                  <button 
+                    onClick={() => {
+                      setConfirmModal({
+                        isOpen: true,
+                        title: 'Format Ulang Susunan Pengurus',
+                        message: 'Apakah Anda yakin ingin memformat ulang susunan pengurus dan menerapkan Draf 47 Pengurus ACC resmi secara utuh ke database? Tindakan ini akan menghapus semua data pengurus yang ada saat ini di Firestore dulu lalu mendaftarkan 47 Pengurus terpilih.',
+                        actionLabel: 'Ya, Format & Terapkan',
+                        isDanger: true,
+                        onConfirm: () => {
+                          const syncPromise = (async () => {
+                            const deletePromises = committee.map(m => deleteCommitteeMember(m.id));
+                            await Promise.all(deletePromises);
+                            const seedPromises: Promise<any>[] = [];
+                            COMMITTEE_MEMBERS.forEach(m => seedPromises.push(addCommitteeMember(m)));
+                            await Promise.all(seedPromises);
+                          })();
+
+                          toast.promise(syncPromise, {
+                            loading: 'Sedang mendaftarkan 47 Pengurus ACC...',
+                            success: 'Berhasil memasukkan draf 47 Pengurus ACC secara utuh!',
+                            error: 'Gagal melakukan sinkronisasi draf.'
+                          });
+                        }
+                      });
+                    }}
+                    className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-theme-primary to-theme-secondary hover:scale-[1.01] text-white py-3 px-4 rounded-xl font-extrabold text-xs transition-all shadow-md cursor-pointer"
+                    title="Menerapkan 47 susunan pengurus ACC draft terbaru secara seketika"
+                  >
+                    <Database size={14} /> Sinkron Draf 47 Pengurus ACC
+                  </button>
+                )}
                 
                 <div className="relative flex-1">
                   <span className="absolute inset-y-0 left-3 flex items-center text-theme-muted pointer-events-none">
@@ -1661,6 +1752,40 @@ export default function Admin() {
           </div>
         )}
       </div>
+
+      {confirmModal && confirmModal.isOpen && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm transition-all duration-300">
+          <div className="bg-theme-surface border border-theme-border rounded-3xl p-5 sm:p-7 max-w-sm w-full shadow-2xl space-y-4 transform scale-100 transition-all border-l-4 border-l-theme-primary">
+            <h3 className="font-extrabold text-base sm:text-lg text-theme-text flex items-center gap-2">
+              ⚠️ {confirmModal.title}
+            </h3>
+            <p className="text-xs sm:text-sm text-theme-muted leading-relaxed">
+              {confirmModal.message}
+            </p>
+            <div className="flex items-center justify-end gap-2.5 pt-2">
+              <button
+                onClick={() => setConfirmModal(null)}
+                className="bg-theme-bg hover:bg-theme-border border border-theme-border text-theme-text px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer"
+              >
+                Batal
+              </button>
+              <button
+                onClick={() => {
+                  confirmModal.onConfirm();
+                  setConfirmModal(null);
+                }}
+                className={`px-4 py-2 rounded-xl text-xs font-extrabold text-white transition-all cursor-pointer ${
+                  confirmModal.isDanger
+                    ? 'bg-red-600 hover:bg-red-700'
+                    : 'bg-theme-primary hover:bg-blue-600'
+                }`}
+              >
+                {confirmModal.actionLabel || 'Ya, Lanjutkan'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

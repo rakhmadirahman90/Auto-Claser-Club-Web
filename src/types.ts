@@ -89,8 +89,9 @@ export interface CommitteeMember {
   name: string;
   role: string;
   description: string;
-  imageUrl: string;
+  imageUrl?: string;
   displayOrder: number;
+  isDeleted?: boolean;
 }
 
 export interface CalendarEvent {

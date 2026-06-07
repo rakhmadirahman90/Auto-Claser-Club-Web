@@ -14,6 +14,7 @@ export default function About() {
   const hash = location.hash.toLowerCase();
 
   const [selectedDoc, setSelectedDoc] = useState<any>(null);
+  const [selectedMember, setSelectedMember] = useState<any>(null);
   const [downloadSuccess, setDownloadSuccess] = useState(false);
 
   const title = aboutData?.title || "Tentang Auto Claser Club";
@@ -201,107 +202,370 @@ export default function About() {
   };
 
   const renderStruktur = () => {
-    const committeeList = [...COMMITTEE_MEMBERS.filter(s => !committee?.find(f => f.id === s.id)), ...(committee || [])];
+    const getRoleRank = (roleStr: string): number => {
+      const r = (roleStr || '').toLowerCase();
+      if (r.includes('pembina')) return 1;
+      if (r.includes('penasehat') || r.includes('penasihat')) return 2;
+      if ((r.includes('ketua') && (r.includes('umum') || r.includes('pusat') || r.includes('nasional'))) || r.includes('president') || r.startsWith('ketum')) {
+        if (r.includes('wakil') || r.includes('vice')) return 5;
+        return 3;
+      }
+      if (r.includes('ketua harian')) return 4;
+      if (r.includes('wakil ketua') || r.includes('vice president') || r.includes('waketum') || r.includes('wakil ketua harian')) return 5;
+      if (r.includes('sekretaris') || r.includes('sekertaris') || r.includes('sekjen') || r.includes('secretary')) return 6;
+      if (r.includes('bendahara') || r.includes('treasurer')) return 7;
+      if (r.includes('korwil') || r.includes('koordinator wilayah')) return 8;
+      if (r.includes('divisi') || r.includes('devisi') || r.includes('bidang') || r.includes('departemen') || r.includes('koordinator') || r.includes('seksi') || r.includes('kabid')) return 9;
+      return 10;
+    };
 
-    // Filter to find President (role containing "President" or "Ketua Umum" or first element if neither found)
-    const president = committeeList.find(m => m.role.toLowerCase().includes('president') || m.role.toLowerCase().includes('ketua umum')) || committeeList[0];
+    const committeeList = [...COMMITTEE_MEMBERS.filter(s => !committee?.find(f => f.id === s.id)), ...(committee || [])].filter(m => !m.isDeleted);
+
+    // Strictly sort by Rank and then by displayOrder
+    committeeList.sort((a, b) => {
+      const rankA = getRoleRank(a.role);
+      const rankB = getRoleRank(b.role);
+      if (rankA !== rankB) return rankA - rankB;
+      const orderA = a.displayOrder ?? 99;
+      const orderB = b.displayOrder ?? 99;
+      if (orderA !== orderB) return orderA - orderB;
+      return a.name.localeCompare(b.name);
+    });
+
+    // Partition lists for a pristine structural tree display
+    const pembina = committeeList.filter(m => m.role.toLowerCase().includes('pembina'));
+    const penasehat = committeeList.filter(m => m.role.toLowerCase().includes('penasehat') || m.role.toLowerCase().includes('penasihat'));
     
-    // VP is role containing 'wakil'
-    const vp = committeeList.find(m => m.role.toLowerCase().includes('wakil')) || committeeList[1];
-    
-    // Others are the rest of the members
-    const others = committeeList.filter(m => m.id !== president?.id && m.id !== vp?.id);
+    const harian = committeeList.filter(m => {
+      const r = m.role.toLowerCase();
+      return (
+        (r.includes('ketua') || r.includes('sekretaris') || r.includes('sekertaris') || r.includes('bendahara') || r.includes('president') || r.includes('ketum') || r.includes('wakil')) &&
+        !r.includes('pembina') && !r.includes('penasehat') && !r.includes('penasihat') && !r.includes('korwil') && !r.includes('divisi') && !r.includes('devisi')
+      );
+    });
+
+    const korwil = committeeList.filter(m => m.role.toLowerCase().includes('korwil') || m.role.toLowerCase().includes('koordinator wilayah'));
+    const divisi = committeeList.filter(m => {
+      const r = m.role.toLowerCase();
+      return (r.includes('divisi') || r.includes('devisi') || r.includes('bidang') || r.includes('departemen')) && !r.includes('pembina') && !r.includes('penasehat') && !r.includes('penasihat');
+    });
+
+    const others = committeeList.filter(m => {
+      return !pembina.some(x => x.id === m.id) &&
+             !penasehat.some(x => x.id === m.id) &&
+             !harian.some(x => x.id === m.id) &&
+             !korwil.some(x => x.id === m.id) &&
+             !divisi.some(x => x.id === m.id);
+    });
+
+    const partitionDivisions = () => {
+      const grouped: { name: string; coordinator: any; members: any[] }[] = [];
+      const divNames = [
+        'Humas',
+        'OKK',
+        'IT & Dokumentasi',
+        'Touring',
+        'Seni & Budaya',
+        'Kemitraan & Wirausaha',
+        'Sosial & Keagamaan',
+        'Peralatan dan Perlengkapan'
+      ];
+      
+      const map = new Map<string, any[]>();
+      divisi.forEach(m => {
+        const key = m.role.replace(/^(di|de)visi\s+/i, '').trim();
+        if (!map.has(key)) {
+          map.set(key, []);
+        }
+        map.get(key)!.push(m);
+      });
+
+      const sortedKeys = Array.from(map.keys()).sort((a, b) => {
+        const indexA = divNames.indexOf(a);
+        const indexB = divNames.indexOf(b);
+        if (indexA !== -1 && indexB !== -1) return indexA - indexB;
+        if (indexA !== -1) return -1;
+        if (indexB !== -1) return 1;
+        return a.localeCompare(b);
+      });
+
+      sortedKeys.forEach(key => {
+        const list = map.get(key)!;
+        const coordinator = list[0];
+        const members = list.slice(1);
+        grouped.push({
+          name: key,
+          coordinator,
+          members
+        });
+      });
+
+      return grouped;
+    };
+
+    const divisionGroups = partitionDivisions();
+
+    // Sub-render helper for clean circular / card avatars with face centering
+    const renderMemberCard = (item: any, colorTheme: 'gold' | 'silver' | 'bronze' | 'blue' | 'purple' | 'emerald') => {
+      let gradient = 'from-amber-400 to-yellow-600';
+      if (colorTheme === 'silver') gradient = 'from-slate-400 to-slate-600';
+      if (colorTheme === 'bronze') gradient = 'from-orange-400 to-amber-700';
+      if (colorTheme === 'blue') gradient = 'from-blue-400 to-indigo-600';
+      if (colorTheme === 'purple') gradient = 'from-purple-400 to-pink-600';
+      if (colorTheme === 'emerald') gradient = 'from-emerald-400 to-teal-600';
+
+      return (
+        <div 
+          key={item.id} 
+          onClick={() => setSelectedMember(item)}
+          className="bg-theme-surface border border-theme-border/70 hover:border-theme-primary/40 p-4 rounded-2xl flex items-center gap-4 transition-all hover:translate-y-[-2px] duration-200 shadow-sm cursor-pointer"
+        >
+          <div className="h-14 w-14 rounded-full overflow-hidden shrink-0 border-2 border-theme-border bg-theme-bg shadow-inner flex items-center justify-center relative">
+            {item.imageUrl && item.imageUrl.trim() !== '' ? (
+              <img 
+                src={item.imageUrl} 
+                alt={item.name} 
+                className="h-full w-full object-cover object-top" 
+                referrerPolicy="no-referrer" 
+              />
+            ) : (
+              <div className={`h-full w-full bg-gradient-to-br ${gradient} flex items-center justify-center text-white font-extrabold text-sm`}>
+                {item.name.split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase()}
+              </div>
+            )}
+          </div>
+          <div className="min-w-0 flex-1">
+            <span className="text-[10px] font-black uppercase text-theme-primary tracking-widest block truncate">
+              {item.role}
+            </span>
+            <h4 className="text-sm font-bold text-theme-text mt-0.5 truncate">{item.name}</h4>
+            {item.description && (
+              <p className="text-[11px] text-theme-muted mt-1 leading-normal line-clamp-1">{item.description}</p>
+            )}
+          </div>
+        </div>
+      );
+    };
 
     return (
-      <div className="max-w-6xl mx-auto py-2">
-        <div className="text-center mb-12 sm:mb-16">
-          <h2 className="text-2xl sm:text-4.5xl font-bold text-theme-text mb-4">Masa Kepengurusan Pusat</h2>
-          <div className="h-1 w-20 bg-theme-primary rounded-full mx-auto mb-6" />
+      <div className="max-w-6xl mx-auto py-2 space-y-16">
+        {/* Title Block */}
+        <div className="text-center">
+          <h2 className="text-2xl sm:text-4.5xl font-extrabold text-theme-text mb-4 tracking-tight">Struktur Kepengurusan ACC</h2>
+          <div className="h-1.5 w-24 bg-theme-primary rounded-full mx-auto mb-6" />
           <p className="text-theme-muted text-sm sm:text-base max-w-2xl mx-auto leading-relaxed">
-            Sinergi pimpinan dan dewan divisi yang mendedikasikan waktu, pikiran, dan tenaga demi kejayaan Auto Claser Club tingkat Nasional.
+            Formasi resmi dewan pembina, penasehat, pengurus harian serta jajaran divisi yang mendedikasikan waktu, pikiran, dan tenaga demi Auto Claser Club.
           </p>
         </div>
 
-        <div className="flex flex-col items-center gap-6 sm:gap-10">
-          {/* Level 1: President Card */}
-          {president && (
-            <div className="w-full max-w-sm">
-              <div className="relative p-0.5 rounded-2xl bg-gradient-to-r from-theme-primary to-theme-secondary shadow-2xl overflow-hidden hover:scale-[1.03] duration-300 transition-all cursor-default">
-                <div className="bg-theme-surface p-6 rounded-[14px]">
-                  <div className="flex items-center gap-4 mb-4">
-                    <div className="h-16 w-16 rounded-xl overflow-hidden shadow-lg shadow-black/30 border border-theme-border/60 flex-shrink-0">
-                      {president.imageUrl ? (
-                        <img src={president.imageUrl} alt={president.name} className="h-full w-full object-cover" referrerPolicy="no-referrer" />
-                      ) : (
-                        <div className="h-full w-full bg-gradient-to-r from-amber-500 to-red-500 flex items-center justify-center text-white font-extrabold text-xl">
-                          {president.name.split(' ').map(n => n[0]).join('').substring(0, 2)}
-                        </div>
-                      )}
-                    </div>
-                    <div>
-                      <span className="text-xs font-black uppercase text-theme-primary tracking-widest block">{president.role}</span>
-                      <h3 className="text-lg font-bold text-theme-text mt-0.5">{president.name}</h3>
-                    </div>
-                  </div>
-                  <p className="text-theme-muted text-xs sm:text-sm leading-relaxed">{president.description}</p>
-                </div>
-              </div>
+        {/* 1. Dewan Pembina Section */}
+        {pembina.length > 0 && (
+          <div className="space-y-6">
+            <div className="flex items-center gap-3 border-b border-theme-border/60 pb-3">
+              <div className="h-2.5 w-2.5 rounded-full bg-yellow-500 animate-pulse" />
+              <h3 className="text-lg font-black tracking-wider text-theme-text uppercase">Dewan Pembina</h3>
             </div>
-          )}
-
-          {/* Level 2: VP Card */}
-          {vp && (
-            <div className="w-full max-w-sm">
-              <div className="bg-theme-surface/80 hover:bg-theme-surface border border-theme-border hover:border-theme-secondary/40 p-6 rounded-2xl shadow-xl transition-all hover:scale-[1.02] duration-300 cursor-default">
-                <div className="flex items-center gap-4 mb-4">
-                  <div className="h-16 w-16 rounded-xl overflow-hidden shadow-lg shadow-black/30 border border-theme-border/60 flex-shrink-0">
-                    {vp.imageUrl ? (
-                      <img src={vp.imageUrl} alt={vp.name} className="h-full w-full object-cover" referrerPolicy="no-referrer" />
-                    ) : (
-                      <div className="h-full w-full bg-gradient-to-r from-blue-500 to-indigo-600 flex items-center justify-center text-white font-extrabold text-xl">
-                        {vp.name.split(' ').map(n => n[0]).join('').substring(0, 2)}
-                      </div>
-                    )}
-                  </div>
-                  <div>
-                    <span className="text-xs font-black uppercase text-theme-secondary tracking-widest block">{vp.role}</span>
-                    <h3 className="text-lg font-bold text-theme-text mt-0.5">{vp.name}</h3>
-                  </div>
-                </div>
-                <p className="text-theme-muted text-xs sm:text-sm leading-relaxed">{vp.description}</p>
-              </div>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {pembina.map(m => renderMemberCard(m, 'gold'))}
             </div>
-          )}
-
-          {/* Core Pengurus Grid */}
-          <div className="w-full grid sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mt-6 border-t border-theme-border/50 pt-10">
-            {others.map((item, index) => (
-              <div 
-                key={item.id || index} 
-                className="bg-theme-surface/40 hover:bg-theme-surface border border-theme-border/80 hover:border-zinc-700 p-5 rounded-2xl flex flex-col justify-between transition-all hover:translate-y-[-4px] duration-300 cursor-default"
-              >
-                <div>
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="h-12 w-12 rounded-lg overflow-hidden shadow-md border border-theme-border/40 flex-shrink-0 bg-theme-bg">
-                      {item.imageUrl ? (
-                        <img src={item.imageUrl} alt={item.name} className="h-full w-full object-cover" referrerPolicy="no-referrer" />
-                      ) : (
-                        <div className="h-full w-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center text-white font-black text-sm">
-                          {item.name.split(' ').map(n => n[0]).join('').substring(0, 2)}
-                        </div>
-                      )}
-                    </div>
-                    <div className="leading-tight">
-                      <span className="text-[10px] font-black uppercase text-theme-muted tracking-widest block">{item.role}</span>
-                      <h4 className="text-sm font-bold text-theme-text mt-0.5">{item.name}</h4>
-                    </div>
-                  </div>
-                  <p className="text-theme-muted text-xs leading-relaxed">{item.description}</p>
-                </div>
-              </div>
-            ))}
           </div>
-        </div>
+        )}
+
+        {/* 2. Dewan Penasehat Section */}
+        {penasehat.length > 0 && (
+          <div className="space-y-6">
+            <div className="flex items-center gap-3 border-b border-theme-border/60 pb-3">
+              <div className="h-2.5 w-2.5 rounded-full bg-slate-400" />
+              <h3 className="text-lg font-black tracking-wider text-theme-text uppercase">Dewan Penasehat</h3>
+            </div>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {penasehat.map(m => renderMemberCard(m, 'silver'))}
+            </div>
+          </div>
+        )}
+
+        {/* 3. Pengurus Harian Inti Section */}
+        {harian.length > 0 && (
+          <div className="space-y-6 bg-theme-surface/35 border border-theme-border/40 p-6 rounded-3xl">
+            <div className="flex items-center gap-3 border-b border-theme-border/60 pb-3 mb-6">
+              <div className="h-2.5 w-2.5 rounded-full bg-theme-primary" />
+              <h3 className="text-lg font-black tracking-wider text-theme-text uppercase">Pengurus Harian Inti</h3>
+            </div>
+            
+            {/* Featured Ketua Umum at the top-center */}
+            {harian.find(m => m.role.toLowerCase() === 'ketua umum') && (() => {
+              const ketum = harian.find(m => m.role.toLowerCase() === 'ketua umum')!;
+              return (
+                <div className="flex justify-center mb-10">
+                  <div 
+                    onClick={() => setSelectedMember(ketum)}
+                    className="w-full max-w-md relative p-0.5 rounded-2xl bg-gradient-to-r from-theme-primary to-theme-secondary shadow-lg overflow-hidden hover:scale-[1.02] duration-300 transition-all cursor-pointer"
+                  >
+                    <div className="bg-theme-surface p-5 rounded-[14px] flex items-center gap-5">
+                      <div className="h-20 w-20 rounded-2xl overflow-hidden shrink-0 border-2 border-theme-primary bg-theme-bg shadow-md flex items-center justify-center relative">
+                        {ketum.imageUrl && ketum.imageUrl.trim() !== '' ? (
+                          <img src={ketum.imageUrl} alt={ketum.name} className="h-full w-full object-cover object-top" referrerPolicy="no-referrer" />
+                        ) : (
+                          <div className="h-full w-full bg-gradient-to-br from-theme-primary to-theme-secondary flex items-center justify-center text-white font-black text-xl">
+                            {ketum.name.split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase()}
+                          </div>
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        <span className="text-xs font-black uppercase text-theme-primary tracking-widest block">{ketum.role}</span>
+                        <h4 className="text-lg font-bold text-theme-text mt-1">{ketum.name}</h4>
+                        <p className="text-xs text-theme-muted mt-1 leading-relaxed">{ketum.description}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* Rest of the executive members below */}
+            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {harian
+                .filter(m => m.role.toLowerCase() !== 'ketua umum')
+                .map(m => renderMemberCard(m, 'bronze'))}
+            </div>
+          </div>
+        )}
+
+        {/* 4. Koordinator Wilayah Selection */}
+        {korwil.length > 0 && (
+          <div className="space-y-6">
+            <div className="flex items-center gap-3 border-b border-theme-border/60 pb-3">
+              <div className="h-2.5 w-2.5 rounded-full bg-sky-500" />
+              <h3 className="text-lg font-black tracking-wider text-theme-text uppercase">Koordinator Wilayah (Korwil)</h3>
+            </div>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {korwil.map(m => renderMemberCard(m, 'blue'))}
+            </div>
+          </div>
+        )}
+
+        {/* 5. Jajaran Divisi & Departemen */}
+        {divisionGroups.length > 0 && (
+          <div className="space-y-8">
+            <div className="flex items-center gap-3 border-b border-theme-border/60 pb-3">
+              <div className="h-2.5 w-2.5 rounded-full bg-emerald-500" />
+              <h3 className="text-lg font-black tracking-wider text-theme-text uppercase">Jajaran Divisi & Departemen</h3>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {divisionGroups.map(divGroup => {
+                return (
+                  <div 
+                    key={divGroup.name}
+                    className="bg-theme-surface/40 border border-theme-border/60 rounded-3xl p-5 sm:p-6 space-y-4 shadow-sm hover:border-theme-primary/30 transition-all duration-300 flex flex-col justify-between"
+                  >
+                    <div>
+                      {/* Division Name Header */}
+                      <div className="flex items-center justify-between border-b border-theme-border/45 pb-2.5 mb-4">
+                        <h4 className="text-sm font-black text-theme-text tracking-wide uppercase flex items-center gap-2">
+                          <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                          Divisi {divGroup.name}
+                        </h4>
+                        <span className="text-[10px] font-extrabold text-white bg-emerald-600/95 px-2.5 py-0.5 rounded-full shadow-sm">
+                          {1 + divGroup.members.length} Personel
+                        </span>
+                      </div>
+
+                      {/* Coordinator section at the top of the division */}
+                      {divGroup.coordinator && (
+                        <div className="mb-5">
+                          <span className="text-[10px] font-black uppercase text-amber-500 tracking-wider mb-2 block bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20 w-max">
+                            👑 Koordinator Divisi
+                          </span>
+                          <div 
+                            onClick={() => setSelectedMember(divGroup.coordinator)}
+                            className="bg-theme-surface border-2 border-theme-primary/45 p-4 rounded-2xl flex items-center gap-4 transition-all shadow-md hover:translate-y-[-2px] duration-200 cursor-pointer"
+                          >
+                            <div className="h-14 w-14 rounded-full overflow-hidden shrink-0 border-2 border-theme-primary bg-theme-bg shadow-inner flex items-center justify-center relative">
+                              {divGroup.coordinator.imageUrl && divGroup.coordinator.imageUrl.trim() !== '' ? (
+                                <img 
+                                  src={divGroup.coordinator.imageUrl} 
+                                  alt={divGroup.coordinator.name} 
+                                  className="h-full w-full object-cover object-top" 
+                                  referrerPolicy="no-referrer" 
+                                />
+                              ) : (
+                                <div className="h-full w-full bg-gradient-to-br from-theme-primary to-theme-secondary flex items-center justify-center text-white font-extrabold text-sm">
+                                  {divGroup.coordinator.name.split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase()}
+                                </div>
+                              )}
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <span className="text-[10px] font-black uppercase text-theme-primary tracking-widest block truncate">
+                                {divGroup.coordinator.role}
+                              </span>
+                              <h4 className="text-sm font-bold text-theme-text mt-0.5 truncate">{divGroup.coordinator.name}</h4>
+                              {divGroup.coordinator.description && (
+                                <p className="text-[11px] text-theme-muted mt-1 leading-normal line-clamp-2">{divGroup.coordinator.description}</p>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Members / Anggota Section below */}
+                      {divGroup.members.length > 0 && (
+                        <div className="space-y-2 pt-3 border-t border-theme-border/30">
+                          <span className="text-[10px] font-black uppercase text-theme-muted tracking-wide mb-2 block">
+                            👥 Anggota Divisi
+                          </span>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            {divGroup.members.map(member => (
+                              <div 
+                                key={member.id} 
+                                onClick={() => setSelectedMember(member)}
+                                className="bg-theme-surface/70 border border-theme-border/50 p-3 rounded-xl flex items-center gap-3 transition-all hover:translate-y-[-1px] duration-150 cursor-pointer"
+                              >
+                                <div className="h-10 w-10 rounded-full overflow-hidden shrink-0 border border-theme-border bg-theme-bg flex items-center justify-center relative">
+                                  {member.imageUrl && member.imageUrl.trim() !== '' ? (
+                                    <img 
+                                      src={member.imageUrl} 
+                                      alt={member.name} 
+                                      className="h-full w-full object-cover object-top" 
+                                      referrerPolicy="no-referrer" 
+                                    />
+                                  ) : (
+                                    <div className="h-full w-full bg-slate-500 flex items-center justify-center text-white font-black text-[10px]">
+                                      {member.name.split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase()}
+                                    </div>
+                                  )}
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                  <span className="text-[9px] font-bold uppercase text-theme-muted block truncate">
+                                    {member.role}
+                                  </span>
+                                  <h5 className="text-xs font-bold text-theme-text mt-0.5 truncate">{member.name}</h5>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* 6. Other / Custom Fields */}
+        {others.length > 0 && (
+          <div className="space-y-6">
+            <div className="flex items-center gap-3 border-b border-theme-border/60 pb-3">
+              <div className="h-2.5 w-2.5 rounded-full bg-purple-500" />
+              <h3 className="text-lg font-black tracking-wider text-theme-text uppercase">Struktur Kepengurusan Lainnya</h3>
+            </div>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {others.map(m => renderMemberCard(m, 'purple'))}
+            </div>
+          </div>
+        )}
       </div>
     );
   };
@@ -510,6 +774,145 @@ export default function About() {
             </motion.div>
           </motion.div>
         )}
+      </AnimatePresence>
+
+      {/* Committee Member Detail Overlay Modal */}
+      <AnimatePresence>
+        {selectedMember && (() => {
+          const m = selectedMember;
+          
+          // Compute organization tier
+          const getOrganizationTier = (roleStr: string): string => {
+            const r = (roleStr || '').toLowerCase();
+            if (r.includes('pembina')) return 'Dewan Pembina ACC';
+            if (r.includes('penasehat') || r.includes('penasihat')) return 'Dewan Penasehat ACC';
+            if ((r.includes('ketua') && (r.includes('umum') || r.includes('pusat') || r.includes('nasional'))) || r.includes('president') || r.startsWith('ketum')) return 'Badan Pengurus Pusat';
+            if (r.includes('ketua harian')) return 'Badan Pengurus Harian';
+            if (r.includes('wakil') || r.includes('sekretaris') || r.includes('bendahara') || r.includes('sekjen') || r.includes('secretary') || r.includes('treasurer')) return 'Badan Pengurus Harian';
+            if (r.includes('korwil') || r.includes('koordinator wilayah')) return 'Koordinator Regional ACC';
+            if (r.includes('divisi') || r.includes('devisi') || r.includes('bidang') || r.includes('departemen')) return 'Jajaran Divisi & Departemen';
+            return 'Staff Khusus Organisasi ACC';
+          };
+
+          const tier = getOrganizationTier(m.role);
+
+          // Find gradient based on role
+          let modalGrad = 'from-emerald-500/20 via-teal-500/10 to-transparent';
+          let borderTh = 'border-emerald-500/30';
+          let badgeBg = 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30';
+          if (tier.includes('Pembina')) {
+            modalGrad = 'from-amber-500/20 via-yellow-600/10 to-transparent';
+            borderTh = 'border-amber-500/30';
+            badgeBg = 'bg-amber-500/15 text-amber-400 border-amber-500/30';
+          } else if (tier.includes('Penasehat')) {
+            modalGrad = 'from-slate-400/20 via-slate-500/10 to-transparent';
+            borderTh = 'border-slate-400/30';
+            badgeBg = 'bg-slate-400/15 text-slate-300 border-slate-400/30';
+          } else if (tier.includes('Pusat') || tier.includes('Harian')) {
+            modalGrad = 'from-orange-500/19 via-amber-700/10 to-transparent';
+            borderTh = 'border-orange-500/30';
+            badgeBg = 'bg-orange-500/15 text-orange-400 border-orange-500/30';
+          } else if (tier.includes('Regional')) {
+            modalGrad = 'from-blue-500/20 via-indigo-600/10 to-transparent';
+            borderTh = 'border-blue-500/30';
+            badgeBg = 'bg-blue-500/15 text-blue-400 border-blue-500/30';
+          }
+
+          return (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[101] flex items-center justify-center p-4 bg-black/85 backdrop-blur-md"
+              onClick={() => setSelectedMember(null)}
+            >
+              <motion.div
+                initial={{ scale: 0.9, y: 20 }}
+                animate={{ scale: 1, y: 0 }}
+                exit={{ scale: 0.9, y: 20 }}
+                className="bg-theme-surface border border-theme-border/85 p-5 sm:p-7 rounded-3xl w-full max-w-sm relative shadow-2xl font-sans overflow-hidden"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {/* Background decorative glow */}
+                <div className={`absolute top-0 left-0 right-0 h-44 bg-gradient-to-b ${modalGrad} pointer-events-none -z-10`} />
+
+                <button 
+                  onClick={() => setSelectedMember(null)}
+                  className="absolute top-4 right-4 text-theme-muted hover:text-theme-text p-2 hover:bg-theme-bg/80 border border-theme-border/50 rounded-full transition-all cursor-pointer z-10"
+                >
+                  <X size={18} />
+                </button>
+
+                {/* Profile Header Elements */}
+                <div className="flex flex-col items-center text-center mt-4">
+                  {/* Avatar wrapper */}
+                  <div className={`h-24 w-24 rounded-full overflow-hidden border-4 ${borderTh} bg-theme-bg shadow-xl flex items-center justify-center relative mb-4`}>
+                    {m.imageUrl && m.imageUrl.trim() !== '' ? (
+                      <img 
+                        src={m.imageUrl} 
+                        alt={m.name} 
+                        className="h-full w-full object-cover object-top" 
+                        referrerPolicy="no-referrer" 
+                      />
+                    ) : (
+                      <div className="h-full w-full bg-gradient-to-br from-theme-primary to-theme-secondary flex items-center justify-center text-white font-black text-2xl">
+                        {m.name.split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase()}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Tier Tag */}
+                  <span className={`text-[9px] font-black tracking-widest uppercase px-3 py-1 rounded-full border ${badgeBg} mb-2`}>
+                    {tier}
+                  </span>
+
+                  {/* Member Name & Role */}
+                  <h3 className="text-xl font-bold text-theme-text leading-tight px-2">{m.name}</h3>
+                  <p className="text-xs font-semibold text-theme-primary mt-1 tracking-wider uppercase">{m.role}</p>
+                </div>
+
+                {/* Detailed card container */}
+                <div className="mt-6 space-y-4">
+                  <div className="bg-theme-bg/60 border border-theme-border/60 p-4 rounded-2xl">
+                    <p className="text-[10px] font-black uppercase text-theme-muted tracking-wide mb-1.5">
+                      Dedikasi & Deskripsi Peran
+                    </p>
+                    <p className="text-xs sm:text-sm text-theme-text leading-relaxed font-medium">
+                      {m.description || `Menjabat sebagai ${m.role} di kepengurusan Auto Claser Club (ACC) Nasional, mendedikasikan kontribusi aktif bagi kekeluargaan dan kejayaan klub.`}
+                    </p>
+                  </div>
+
+                  {/* Metadata fields */}
+                  <div className="grid grid-cols-2 gap-2.5">
+                    <div className="bg-theme-bg/40 border border-theme-border/40 p-3 rounded-xl text-center">
+                      <span className="text-[9px] font-bold uppercase text-theme-muted block mb-0.5">Status Pengurus</span>
+                      <span className="text-xs font-bold text-emerald-400 flex items-center justify-center gap-1">
+                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                        Aktif Resmi
+                      </span>
+                    </div>
+                    <div className="bg-theme-bg/40 border border-theme-border/40 p-3 rounded-xl text-center">
+                      <span className="text-[9px] font-bold uppercase text-theme-muted block mb-0.5">KTA Elektronik</span>
+                      <span className="text-xs font-bold text-theme-text uppercase font-mono border border-theme-border/50 px-1 py-0.5 rounded bg-theme-bg">
+                        ACC-KTA-{m.id.startsWith('c') ? m.id.toUpperCase() : `ID${m.id}`}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Action footer */}
+                <div className="flex gap-2.5 mt-6 justify-end">
+                  <button
+                    onClick={() => setSelectedMember(null)}
+                    className="w-full sm:w-auto px-5 py-2.5 bg-gradient-to-r from-theme-primary to-theme-secondary text-white text-xs font-black tracking-wider uppercase rounded-xl hover:scale-[1.02] shadow-sm transition-all cursor-pointer text-center"
+                  >
+                    Selesai
+                  </button>
+                </div>
+              </motion.div>
+            </motion.div>
+          );
+        })()}
       </AnimatePresence>
     </section>
   );

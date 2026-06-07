@@ -121,54 +121,70 @@ export const CHAPTERS: Chapter[] = [
 ];
 
 export const COMMITTEE_MEMBERS: CommitteeMember[] = [
-  {
-    id: '1',
-    name: 'Ir. Herdian Syahputra, M.T.',
-    role: 'Ketua Umum (President)',
-    description: 'Pemimpin tertinggi pengurus pusat, merancang visi misi besar, penasihat utama, serta penanggung jawab jalannya AD/ART klub otomotif.',
-    imageUrl: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&q=80&w=400',
-    displayOrder: 1
-  },
-  {
-    id: '2',
-    name: 'Chandra Wijaya',
-    role: 'Wakil Ketua Umum',
-    description: 'Mengkoordinasikan perluasan dan sertifikasi unit chapter regional seluruh Indonesia, serta menjembatani sinergi kemitraan eksternal.',
-    imageUrl: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&q=80&w=400',
-    displayOrder: 2
-  },
-  {
-    id: '3',
-    name: 'Amelia Putri, S.I.Kom',
-    role: 'Sekretaris Jenderal',
-    description: 'Pusat administratif klub, mendata surat-surat legalitas, registrasi anggota baru nasional, dan menyusun agenda rapat tahunan.',
-    imageUrl: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=400',
-    displayOrder: 3
-  },
-  {
-    id: '4',
-    name: 'Rian Anggoro',
-    role: 'Bendahara Umum',
-    description: 'Melakukan pencatatan arus dana kas, mengatur budgeting kegiatan sosial baksos, serta menyajikan audit keuangan transparan bagi internal.',
-    imageUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=400',
-    displayOrder: 4
-  },
-  {
-    id: '5',
-    name: 'Aris Munandar',
-    role: 'Divisi Kegiatan & Touring',
-    description: 'Menjadi Road Captain handal, menyusun standard operating safety touring bersama Kepolisian, serta merancang acara kumpul nasional.',
-    imageUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=400',
-    displayOrder: 5
-  },
-  {
-    id: '6',
-    name: 'Desta Pratama',
-    role: 'Divisi Humas & Media',
-    description: 'Menjaga image publik organisasi, mengolah isi konten digital sosial media resmi, dokumentasi pers, dan portal situs resmi.',
-    imageUrl: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=400',
-    displayOrder: 6
-  }
+  { id: 'c1', name: 'Walikota Parepare H.Tasmin Hamid', role: 'Pembina', description: 'Dewan Pembina ACC, Walikota Parepare yang memberikan bimbingan dan dukungan kepengurusan.', displayOrder: 1 },
+  { id: 'c2', name: 'Om H. Munir', role: 'Pembina', description: 'Dewan Pembina ACC, penasihat utama strategis kepengurusan.', displayOrder: 2 },
+  { id: 'c3', name: 'Om H. Farman Amrullah', role: 'Pembina', description: 'Dewan Pembina ACC, aktif membina pertumbuhan chapter regional.', displayOrder: 3 },
+  { id: 'c4', name: 'Om Yopi', role: 'Pembina', description: 'Dewan Pembina ACC, mendukung kesinambungan arah gerak klub nasional.', displayOrder: 4 },
+  
+  { id: 'c5', name: 'Om Haruna', role: 'Penasehat', description: 'Dewan Penasehat ACC, memberikan masukan & saran kebijakan organisasi.', displayOrder: 5 },
+  { id: 'c6', name: 'Om Burhanuddin', role: 'Penasehat', description: 'Dewan Penasehat ACC, pengawas jalannya kode etik kekeluargaan klub.', displayOrder: 6 },
+  { id: 'c7', name: 'Om Purwanto', role: 'Penasehat', description: 'Dewan Penasehat ACC, membina nilai kebersamaan antar lintas generasi.', displayOrder: 7 },
+
+  { id: 'c8', name: 'Om Sukri Lanra', role: 'Ketua Umum', description: 'Ketua Umum (President) Auto Claser Club, pimpinan tertinggi pengambil keputusan dan pemegang arah kebijakan klub.', displayOrder: 8 },
+  { id: 'c9', name: 'Om H. Barhaman', role: 'Ketua Harian', description: 'Mengkoordinir jalannya operasi harian pengurus pusat nasional secara berkala.', displayOrder: 9 },
+  { id: 'c10', name: 'Om Amard', role: 'Wakil Ketua', description: 'Wakil Ketua Umum ACC, mendampingi Ketua Umum dalam pelaksanaan program kerja strategis.', displayOrder: 10 },
+  { id: 'c11', name: 'Om Rusdan Tahir', role: 'Sekertaris', description: 'Sekretaris Umum ACC, mengurusi administrasi nasional, keanggotaan, serta dokumentasi korporasi klub.', displayOrder: 11 },
+  { id: 'c12', name: 'Om H. Ahmad Yani', role: 'Bendahara', description: 'Bendahara Umum ACC, mengelola keuangan kas nasional, budgeting, dan laporan keuangan transparan.', displayOrder: 12 },
+
+  { id: 'c13', name: 'Om Asdar', role: 'Korwil Sidrap', description: 'Koordinator Wilayah Sidrap, memimpin dan merangkul rekan-rekan regional Sidrap.', displayOrder: 13 },
+  { id: 'c14', name: 'Om A.Sugawa', role: 'Korwil Sidrap', description: 'Koordinator Wilayah Sidrap, menggerakkan aktivitas dan persaudaraan otomotif Sidrap.', displayOrder: 14 },
+  
+  { id: 'c15', name: 'Om Alif Sandi', role: 'Korwil Barru', description: 'Koordinator Wilayah Barru, memfasilitasi persatuan klub di chapter Barru.', displayOrder: 15 },
+  { id: 'c16', name: 'Om Saldi', role: 'Korwil Barru', description: 'Koordinator Wilayah Barru, aktif mengoordinasikan kopdar & baksos lokal.', displayOrder: 16 },
+
+  { id: 'c17', name: 'Om Bendrop', role: 'Korwil Palopo', description: 'Koordinator Wilayah Palopo, mengkoordinir aktivitas perkumpulan chapter di wilayah Palopo.', displayOrder: 17 },
+  { id: 'c18', name: 'Om Nanang', role: 'Korwil Palopo', description: 'Koordinator Wilayah Palopo, penggerak harian rekan otomotif regional Palopo.', displayOrder: 18 },
+
+  { id: 'c19', name: 'Om Amri', role: 'Korwil Pinrang', description: 'Koordinator Wilayah Pinrang, mengawal kegiatan silaturahmi klub di regional Pinrang.', displayOrder: 19 },
+  { id: 'c20', name: 'Om Akmal', role: 'Korwil Pinrang', description: 'Koordinator Wilayah Pinrang, menjalin kebersamaan erat antar member di Pinrang.', displayOrder: 20 },
+
+  { id: 'c21', name: 'Om Maming', role: 'Korwil Majene', description: 'Koordinator Wilayah Majene, penanggung jawab utama kemajuan chapter Majene.', displayOrder: 21 },
+  { id: 'c22', name: 'Om Arief', role: 'Korwil Pangkep', description: 'Koordinator Wilayah Pangkep, memimpin konsolidasi serta agenda regional Pangkep.', displayOrder: 22 },
+
+  { id: 'c23', name: 'Om Adhi', role: 'Korwil Makassar', description: 'Koordinator Wilayah Makassar, menggerakkan chapter episentrum Ibukota Makassar.', displayOrder: 23 },
+  { id: 'c24', name: 'Om Rizal', role: 'Korwil Makassar', description: 'Koordinator Wilayah Makassar, mendukung sinergi kolaborasi kegiatan kota Makassar.', displayOrder: 24 },
+
+  { id: 'c25', name: 'Om Irwan', role: 'Korwil Mamasa', description: 'Koordinator Wilayah Mamasa, memperluas jangkauan dan mempererat tali persaudaraan di Mamasa.', displayOrder: 25 },
+  { id: 'c26', name: 'Om Amiriddin', role: 'Korwil Enrekang', description: 'Koordinator Wilayah Enrekang, koordinator harian aksi hobi dan bakti sosial masyarakat Enrekang.', displayOrder: 26 },
+
+  { id: 'c27', name: 'Om Andi Hasbial', role: 'Divisi Humas', description: 'Penghubung komunikasi internal web, media sosial, & pengenalan citra positif klub ke dunia luar.', displayOrder: 27 },
+  { id: 'c28', name: 'Om Sulaeman', role: 'Divisi Humas', description: 'Hubungan masyarakat eksternal, menjalin komunikasi aktif dengan klub-klub sejawat.', displayOrder: 28 },
+
+  { id: 'c29', name: 'Om Asmard', role: 'Divisi OKK', description: 'Divisi Organisasi, Kaderisasi & Keanggotaan, memformulasikan pembinaan nilai keorganisasian angggota.', displayOrder: 29 },
+  { id: 'c30', name: 'Om H. Anas', role: 'Divisi OKK', description: 'Mata rantai kaderisasi, bertugas melakukan bimbingan orientasi dasar bagi calon pendaftar.', displayOrder: 30 },
+  { id: 'c31', name: 'Om Wahyu', role: 'Divisi OKK', description: 'Mencatat kepatuhan keanggotaan dan pembaruan database administrasi KTA.', displayOrder: 31 },
+
+  { id: 'c32', name: 'Om Rahmadi rahman', role: 'Divisi IT & Dokumentasi', description: 'Merancang dan maintain ekosistem IT klub, mengemas dokumentasi fotografi & videografi kegiatan.', displayOrder: 32 },
+  { id: 'c33', name: 'Om Mahmud', role: 'Divisi IT & Dokumentasi', description: 'Arsiparis multimedia digital dan pengarah dokumentasi sinematik touring klub.', displayOrder: 33 },
+  { id: 'c34', name: 'Om Umar', role: 'Divisi IT & Dokumentasi', description: 'Membantu penyediaan infrastruktur komunikasi digital dan publikasi visual online.', displayOrder: 34 },
+
+  { id: 'c35', name: 'Om Mayor (Hilmi)', role: 'Divisi Touring', description: 'Pimpinan rombongan / Road Captain kawakan otomotif, menyusun SOP keselamatan berkendara di jalan raya.', displayOrder: 35 },
+  { id: 'c36', name: 'Om Firman', role: 'Divisi Touring', description: 'Marshal andal, memetakan rute perjalanan, titik istirahat, serta kelengkapan mekanis konvoi.', displayOrder: 36 },
+
+  { id: 'c37', name: 'Om Anto', role: 'Divisi Seni & Budaya', description: 'Mengorkestrasikan ekspresi seni kreatif, parade kebudayaan lokal daerah, dan event entertaimen.', displayOrder: 37 },
+  { id: 'c38', name: 'Om Udin Abdullah', role: 'Divisi Seni & Budaya', description: 'Mendukung kearifan budaya nusantara dalam ragam festival pertemuan akbar ACC.', displayOrder: 38 },
+
+  { id: 'c39', name: 'Om H. Heru Saenong', role: 'Divisi Kemitraan & Wirausaha', description: 'Menghubungkan sponsorship brand terkemuka, serta menumbuhkan ekosistem bisnis kreatif internal member.', displayOrder: 39 },
+  { id: 'c40', name: 'Om Ciwang', role: 'Divisi Kemitraan & Wirausaha', description: 'Menggalang relasi partner bisnis eksternal, diskon suku cadang, & merchandise official.', displayOrder: 40 },
+  { id: 'c41', name: 'Om Rossi', role: 'Divisi Kemitraan & Wirausaha', description: 'Mengelola perputaran unit wirausaha mandiri komunitas demi kemandirian finansial perkumpulan.', displayOrder: 41 },
+
+  { id: 'c42', name: 'Om Zulkarnain', role: 'Divisi Sosial & Keagamaan', description: 'Pelaksana garda depan program baksos kemanusiaan, korban bencana, serta pengajian bersama.', displayOrder: 42 },
+  { id: 'c43', name: 'Om Nasruddin', role: 'Divisi Sosial & Keagamaan', description: 'Mengatur kunjungan ke panti asuhan, kepedulian religius, dan ikatan silaturahmi spiritual.', displayOrder: 43 },
+  { id: 'c44', name: 'Om Herul Anas', role: 'Divisi Sosial & Keagamaan', description: 'Menyusun aksi tanggap bencana daerah dan penggalangan donasi sosial teratur.', displayOrder: 44 },
+
+  { id: 'c45', name: 'Om Ardhi', role: 'Devisi Peralatan dan Perlengkapan', description: 'Penanggung jawab ketersediaan logistik fisik, tenda, sound system, & perlengkapan kopdar luar ruang.', displayOrder: 45 },
+  { id: 'c46', name: 'Om A.Acong', role: 'Devisi Peralatan dan Perlengkapan', description: 'Mengawal pemeliharaan inventaris peralatan berharga milik pengurus pusat ACC.', displayOrder: 46 },
+  { id: 'c47', name: 'Om Mansur', role: 'Devisi Peralatan dan Perlengkapan', description: 'Mendistribusikan kebutuhan sarana prasarana penunjang kenyamanan acara akbarmu.', displayOrder: 47 }
 ];
 
 export const MEMBER_PROFILES: MemberProfile[] = [

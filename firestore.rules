@@ -43,13 +43,14 @@ service cloud.firestore {
     }
 
     function isValidCommittee(data) {
-      return data.keys().hasAll(['name', 'role', 'description', 'imageUrl', 'displayOrder']) &&
-             data.keys().size() == 5 &&
-             data.name is string && data.name.size() <= 200 &&
-             data.role is string && data.role.size() <= 200 &&
-             data.description is string && data.description.size() <= 2000 &&
-             data.imageUrl is string && data.imageUrl.size() <= 1048000 &&
-             data.displayOrder is number;
+      return (data.keys().hasAll(['isDeleted']) && data.isDeleted == true) || (
+        data.keys().hasAll(['name', 'role', 'description', 'displayOrder']) &&
+        data.name is string && data.name.size() <= 200 &&
+        data.role is string && data.role.size() <= 200 &&
+        data.description is string && data.description.size() <= 2000 &&
+        data.displayOrder is number &&
+        (!data.keys().contains('imageUrl') || data.imageUrl is string)
+      );
     }
 
     match /posts/{postId} {
@@ -88,11 +89,7 @@ service cloud.firestore {
 
     match /committee/{memberId} {
       allow read: if true;
-      allow create: if isAdmin() && isValidId(memberId) && isValidCommittee(incoming());
-      allow update: if isAdmin() && isValidId(memberId) && isValidCommittee(incoming()) && (
-        incoming().diff(existing()).affectedKeys().hasOnly(['name', 'role', 'description', 'imageUrl', 'displayOrder'])
-      );
-      allow delete: if isAdmin() && isValidId(memberId);
+      allow create, update, delete: if isAdmin() && isValidId(memberId);
     }
     
     match /memberProfiles/{memberId} {

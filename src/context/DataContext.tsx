@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { BlogPost, Activity, Chapter, HeroData, AboutData, JoinData, Registration, AnnouncementData, CommitteeMember, MemberProfile, CalendarEvent } from '../types';
 import { db, auth } from '../firebase';
-import { BLOG_POSTS } from '../data';
+import { BLOG_POSTS, COMMITTEE_MEMBERS } from '../data';
 import { 
   collection, query, onSnapshot, doc, setDoc, updateDoc, deleteDoc, 
   getDocFromServer, addDoc
@@ -309,7 +309,26 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const deleteCommitteeMember = async (id: string) => {
-    try { await deleteDoc(doc(db, 'committee', id)); }
+    const idStr = String(id);
+    console.log('Action: deleteCommitteeMember', idStr);
+    
+    // Optimistic UI state update to reflect the deletion immediately
+    setCommittee(prev => {
+      const exists = prev.some(m => m.id === idStr);
+      if (exists) {
+        return prev.map(m => m.id === idStr ? { ...m, isDeleted: true } : m);
+      } else {
+        return [...prev, { id: idStr, isDeleted: true } as CommitteeMember];
+      }
+    });
+
+    try {
+      if (idStr.startsWith('c') || COMMITTEE_MEMBERS.some(m => m.id === idStr)) {
+        await setDoc(doc(db, 'committee', idStr), { isDeleted: true }, { merge: true });
+      } else {
+        await deleteDoc(doc(db, 'committee', idStr));
+      }
+    }
     catch (err) { handleFirestoreError(err, OperationType.DELETE, `committee/${id}`); }
   };
 
