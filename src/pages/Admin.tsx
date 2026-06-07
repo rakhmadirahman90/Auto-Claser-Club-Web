@@ -3,9 +3,10 @@ import { useData } from '../context/DataContext';
 import { 
   Plus, Edit2, Trash2, ArrowLeft, LogOut, Database, 
   Home, Info, UserPlus, Bell, FileText, Calendar, 
-  MapPin, Users, ClipboardList, Search, X, Eye, EyeOff, ThumbsUp, User, CheckCircle, MessageCircle 
+  MapPin, Users, ClipboardList, Search, X, Eye, EyeOff, ThumbsUp, User, CheckCircle, MessageCircle, CreditCard 
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import html2canvas from 'html2canvas';
 import { logout, auth, db } from '../firebase';
 import toast from 'react-hot-toast';
 import { BLOG_POSTS, ACTIVITIES, CHAPTERS, COMMITTEE_MEMBERS, MEMBER_PROFILES } from '../data';
@@ -49,6 +50,7 @@ export default function Admin() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState<any>({});
   const [searchTerm, setSearchTerm] = useState<string>('');
+  const [selectedKtaMember, setSelectedKtaMember] = useState<MemberProfile | null>(null);
 
   const formRef = useRef<HTMLDivElement>(null);
   
@@ -827,6 +829,17 @@ export default function Admin() {
             <label className="block text-xs font-bold tracking-wider text-theme-muted uppercase mb-1.5">Foto Profil</label>
             <ImageUpload value={formData.imageUrl || ''} onChange={url => setFormData({...formData, imageUrl: url})} />
           </div>
+          {editingId !== 'new' && (
+            <div className="pt-4 border-t border-theme-border/40 mt-4">
+              <button
+                type="button"
+                onClick={() => setSelectedKtaMember(formData as MemberProfile)}
+                className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-amber-500 to-orange-600 hover:scale-[1.01] text-white py-3 px-4 rounded-xl font-extrabold text-xs transition-all shadow-md cursor-pointer"
+              >
+                <CreditCard size={15} /> Tampilkan Kartu Anggota (KTA) Digital
+              </button>
+            </div>
+          )}
         </div>
       );
     }
@@ -1267,6 +1280,15 @@ export default function Admin() {
                     title="Kirim ulang verifikasi WhatsApp"
                   >
                     <MessageCircle size={13} />
+                  </button>
+                )}
+                {activeTab === 'profile' && (
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); setSelectedKtaMember(item); }} 
+                    className="w-8 h-8 flex items-center justify-center bg-amber-500/15 hover:bg-amber-500 text-amber-500 hover:text-white rounded-lg transition-all animate-pulse"
+                    title="Buka Kartu Anggota (KTA) Digital"
+                  >
+                    <CreditCard size={13} />
                   </button>
                 )}
                 <button 
@@ -1786,6 +1808,363 @@ export default function Admin() {
           </div>
         </div>
       )}
+
+      {/* 🪪 DIGITAL KTA VIEW, DOWNLOAD & PRINT MODAL */}
+      {selectedKtaMember && (() => {
+        const m = selectedKtaMember;
+        
+        // Printable handler
+        const handlePrintKTA = () => {
+          const printWindow = window.open('', '_blank');
+          if (!printWindow) {
+            toast.error('Popup terblokir oleh browser Anda. Harap izinkan popup untuk mencetak KTA.');
+            return;
+          }
+          
+          const frontHtml = document.getElementById('kta-front-card')?.innerHTML || '';
+          const backHtml = document.getElementById('kta-back-card')?.innerHTML || '';
+          
+          printWindow.document.write(`
+            <html>
+              <head>
+                <title>Cetak KTA ACC - ${m.name}</title>
+                <script src="https://cdn.tailwindcss.com"></script>
+                <style>
+                  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700;900&family=JetBrains+Mono:wght@500;700&family=Inter:wght@400;500;600;700&display=swap');
+                  body { 
+                    font-family: 'Inter', sans-serif;
+                    background-color: #f8fafc;
+                    padding: 40px;
+                  }
+                  @media print {
+                    body { padding: 0; margin: 0; background-color: white; }
+                    .no-print { display: none !important; }
+                    .print-page {
+                      page-break-after: always;
+                      display: flex;
+                      align-items: center;
+                      justify-content: center;
+                      height: 100vh;
+                    }
+                  }
+                </style>
+              </head>
+              <body class="flex flex-col items-center justify-center min-h-screen gap-10 bg-slate-50">
+                <div class="no-print bg-white p-5 rounded-3xl border border-slate-200 shadow-xl max-w-sm text-center">
+                  <h3 class="font-extrabold text-slate-800 text-sm mb-1">Cetak Kartu Tanda Anggota</h3>
+                  <p class="text-xs text-slate-500 mb-4 leading-normal">KTA Digital dikustomisasi dengan dimensi PVC Standard CR80 (85.6mm x 54mm) resolusi tinggi.</p>
+                  <button onclick="window.print()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-black text-xs uppercase tracking-wider py-3 px-6 rounded-xl transition-all cursor-pointer">
+                    🖨️ Mulai Cetak Kartu
+                  </button>
+                </div>
+                
+                <div class="print-page flex flex-col items-center justify-center">
+                  <div class="scale-110 origin-center pointer-events-none">
+                    <div class="w-[500px] h-[316px] rounded-[24px] overflow-hidden relative shadow-2xl border border-amber-500/30 text-white select-none relative" style="background: repeating-linear-gradient(45deg, rgba(0,0,0,0.15) 0px, rgba(0,0,0,0.15) 2px, transparent 2px, transparent 6px), linear-gradient(135deg, #222 0%, #111 100%);">
+                      ${frontHtml}
+                    </div>
+                  </div>
+                  <p class="no-print text-xs font-bold text-slate-400 mt-2 tracking-widest uppercase">KTA Bagian Depan (Front Side)</p>
+                </div>
+
+                <div class="print-page flex flex-col items-center justify-center">
+                  <div class="scale-110 origin-center pointer-events-none">
+                    <div class="w-[500px] h-[316px] rounded-[24px] overflow-hidden relative shadow-2xl border border-amber-500/30 text-white select-none relative" style="background: repeating-linear-gradient(45deg, rgba(0,0,0,0.15) 0px, rgba(0,0,0,0.15) 2px, transparent 2px, transparent 6px), linear-gradient(135deg, #1e1e1e 0%, #0d0d0d 100%);">
+                      ${backHtml}
+                    </div>
+                  </div>
+                  <p class="no-print text-xs font-bold text-slate-400 mt-2 tracking-widest uppercase">KTA Bagian Belakang (Back Side)</p>
+                </div>
+              </body>
+            </html>
+          `);
+          printWindow.document.close();
+        };
+
+        // Downloadable image handler using html2canvas
+        const handleDownloadKTA = async (side: 'front' | 'back' | 'both') => {
+          const elementId = side === 'front' ? 'kta-front-card' : 'kta-back-card';
+          const element = document.getElementById(elementId);
+          if (!element) return;
+          
+          try {
+            toast.loading(`Membuat file PNG KTA bagian ${side === 'front' ? 'depan' : 'belakang'}...`, { id: 'kta-download-toast' });
+            
+            const canvas = await html2canvas(element, {
+              scale: 3, // Multiplies canvas size to 3x for pristine high-end quality matching credit-card printing
+              useCORS: true,
+              allowTaint: true,
+              backgroundColor: null,
+            });
+            
+            const imgData = canvas.toDataURL('image/png');
+            const link = document.createElement('a');
+            link.href = imgData;
+            link.download = `KTA_ACC_${side.toUpperCase()}_${m.name.toUpperCase().replace(/\s+/g, '_')}.png`;
+            link.click();
+            
+            toast.success(`KTA Bagian ${side === 'front' ? 'Depan' : 'Belakang'} sukses diunduh!`, { id: 'kta-download-toast' });
+          } catch (error) {
+            console.error('Download KTA item error:', error);
+            toast.error('Gagal memproses gambar KTA. Periksa foto profil Anda.', { id: 'kta-download-toast' });
+          }
+        };
+
+        return (
+          <div 
+            className="fixed inset-0 z-[9900] flex items-center justify-center p-4 bg-black/85 backdrop-blur-md overflow-y-auto"
+            onClick={() => setSelectedKtaMember(null)}
+          >
+            <div 
+              className="bg-theme-surface border border-theme-border rounded-[32px] p-5 sm:p-8 w-full max-w-2xl shadow-2xl relative flex flex-col items-center gap-6 my-10 max-h-[90vh] overflow-y-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Outer decorative light bars */}
+              <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-amber-500 via-theme-primary to-orange-600" />
+              
+              <button 
+                onClick={() => setSelectedKtaMember(null)}
+                className="absolute top-5 right-5 text-theme-muted hover:text-theme-text p-2 hover:bg-theme-bg/80 border border-theme-border/50 rounded-full transition-all cursor-pointer z-10"
+              >
+                <X size={18} />
+              </button>
+
+              <div className="text-center space-y-1">
+                <span className="text-[9px] font-black tracking-widest uppercase bg-theme-primary/15 text-theme-primary border border-theme-primary/30 px-3 py-1 rounded-full">
+                  🪪 Kartu Tanda Anggota Digital
+                </span>
+                <h2 className="text-xl sm:text-2xl font-black text-theme-text tracking-tight pt-1">Auto Claser Club</h2>
+                <p className="text-xs text-theme-muted">Model pratinjau KTA PVC Premium untuk pencetakan resmi</p>
+              </div>
+
+              {/* CARD PREVIEW AREA COMPRISING HORIZONTAL GRID */}
+              <div className="w-full flex flex-col gap-6 items-center">
+                
+                {/* 1. KEY FRONT CARD WRAPPER */}
+                <div className="w-full max-w-[480px] flex flex-col items-center">
+                  <span className="text-[10px] font-black text-amber-500 uppercase tracking-widest mb-2 flex items-center gap-1.5">
+                    <span className="h-2 w-2 rounded-full bg-amber-500" /> KTA BAGIAN DEPAN (FRONT)
+                  </span>
+                  
+                  <div 
+                    id="kta-front-card"
+                    className="w-full max-w-[480px] aspect-[1.581/1] rounded-[24px] overflow-hidden relative shadow-2xl border border-amber-500/30 text-white select-none shrink-0"
+                    style={{ 
+                      background: 'repeating-linear-gradient(45deg, rgba(0,0,0,0.1) 0px, rgba(0,0,0,0.1) 2px, transparent 2px, transparent 6px), linear-gradient(135deg, #1f1f1f 0%, #111111 100%)',
+                      fontFamily: '"Inter", sans-serif'
+                    }}
+                  >
+                    {/* Metallic glow accents */}
+                    <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-red-600 via-amber-500 to-rose-600" />
+                    <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/[0.03] to-white/[0.08] pointer-events-none" />
+
+                    {/* Logo & Banner Section */}
+                    <div className="absolute top-4 left-5 right-5 flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        {/* Custom Red Sports Car Emblem Logo SVG */}
+                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-red-600 to-rose-700 flex items-center justify-center border border-white/20 shadow-md">
+                          <svg className="w-4 h-4 text-white" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z" />
+                          </svg>
+                        </div>
+                        <div>
+                          <h4 className="text-xs font-black tracking-widest text-white leading-none font-mono">AUTO CLASER CLUB</h4>
+                          <span className="text-[6.5px] font-black text-amber-500 tracking-wider font-mono">EST. 2018 • SULAWESI INDONESIA</span>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-[7.5px] font-black bg-gradient-to-r from-amber-500 to-orange-500 text-black px-2 py-0.5 rounded border border-amber-500/20 uppercase tracking-widest block leading-none">
+                          {m.role && m.role.toLowerCase().includes('anggota') ? 'MEMBER' : 'OFFICIAL'}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Member Details Layout */}
+                    <div className="absolute top-[68px] left-5 right-5 bottom-4 flex gap-4">
+                      {/* Left Block: Profile Photo Embedded */}
+                      <div className="flex flex-col items-center justify-between h-full shrink-0 w-[100px]">
+                        <div className="w-[85px] h-[105px] rounded-xl overflow-hidden border-2 border-amber-500/75 bg-black/40 shadow-[0_0_15px_rgba(239,68,68,0.3)] flex items-center justify-center relative">
+                          {m.imageUrl && m.imageUrl.trim() !== '' ? (
+                            <img 
+                              src={m.imageUrl} 
+                              alt={m.name} 
+                              className="h-full w-full object-cover object-top" 
+                              referrerPolicy="no-referrer" 
+                            />
+                          ) : (
+                            <div className="h-full w-full bg-gradient-to-br from-theme-surface to-slate-800 flex items-center justify-center text-amber-500 text-xl font-black">
+                              {m.name.split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase()}
+                            </div>
+                          )}
+                        </div>
+                        {/* Real Smartcard gold Chip SVG */}
+                        <div className="w-[44px] h-[32px] rounded-md bg-gradient-to-r from-amber-400 via-amber-300 to-yellow-500 flex items-center justify-center border border-amber-600/50 p-1 shadow">
+                          <svg className="w-full h-full text-amber-800/80" viewBox="0 0 100 80">
+                            <rect x="5" y="5" width="90" height="70" rx="10" fill="none" stroke="currentColor" strokeWidth="4" />
+                            <line x1="25" y1="5" x2="25" y2="75" stroke="currentColor" strokeWidth="3" />
+                            <line x1="50" y1="5" x2="50" y2="75" stroke="currentColor" strokeWidth="3" />
+                            <line x1="75" y1="5" x2="75" y2="75" stroke="currentColor" strokeWidth="3" />
+                            <line x1="5" y1="25" x2="95" y2="25" stroke="currentColor" strokeWidth="3" />
+                            <line x1="5" y1="55" x2="95" y2="55" stroke="currentColor" strokeWidth="3" />
+                            <circle cx="50" cy="40" r="10" fill="currentColor" />
+                          </svg>
+                        </div>
+                      </div>
+
+                      {/* Right Block: Personal Fields */}
+                      <div className="flex-1 min-w-0 flex flex-col justify-between h-full pt-1">
+                        <div>
+                          <span className="text-[6.5px] font-extrabold text-theme-primary tracking-widest block leading-none uppercase">KARTU TANDA ANGGOTA DIGITAL</span>
+                          <h3 className="text-sm font-black text-white truncate leading-tight tracking-wide mt-0.5" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>
+                            {m.name.toUpperCase()}
+                          </h3>
+                        </div>
+
+                        {/* ID card details grids */}
+                        <div className="grid grid-cols-2 gap-x-3 gap-y-2.5 bg-black/50 p-2.5 border border-white/5 rounded-xl">
+                          <div>
+                            <span className="text-[6.5px] text-zinc-400 uppercase tracking-wider block font-bold leading-none">NO. ANGGOTA (KTA)</span>
+                            <span className="text-[10px] font-black text-amber-400 font-mono tracking-wider block leading-none mt-1">
+                              {m.membershipNumber || `ACC-KTA-${m.id}`}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-[6.5px] text-zinc-400 uppercase tracking-wider block font-bold leading-none">PLAT NOMOR</span>
+                            <span className="text-[9.5px] font-mono font-black text-white flex items-center gap-1 mt-1 leading-none">
+                              <span className="bg-zinc-800 text-white border border-zinc-700 px-1 py-[1.5px] rounded text-[8px] font-black">ID</span>
+                              {m.licensePlate || '-'}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-[6.5px] text-zinc-400 uppercase tracking-wider block font-bold leading-none">KENDARAAN</span>
+                            <span className="text-[9px] font-bold text-white truncate block leading-none mt-1">
+                              {m.car || '-'}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-[6.5px] text-zinc-400 uppercase tracking-wider block font-bold leading-none">REGIONAL STATUS</span>
+                            <span className="text-[8px] font-black text-emerald-400 truncate block uppercase leading-none mt-1">
+                              {m.role || 'ANGGOTA'}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Card metadata footer containing Joined text */}
+                        <div className="flex items-center justify-between text-[7px] text-zinc-400">
+                          <span className="font-extrabold">STATUS: <span className="text-emerald-400 font-black">● AKTIF RESMI</span></span>
+                          <span className="font-extrabold">BERGABUNG: <span className="text-white font-black">{m.yearJoined || '2022'}</span></span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Download Front action */}
+                  <button
+                    onClick={() => handleDownloadKTA('front')}
+                    className="w-full mt-3 flex items-center justify-center gap-1.5 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-white text-xs font-bold py-2 rounded-xl transition-all cursor-pointer"
+                  >
+                    📥 Unduh KTA Bagian Depan (PNG)
+                  </button>
+                </div>
+
+                {/* 2. KEY BACK CARD WRAPPER */}
+                <div className="w-full max-w-[480px] flex flex-col items-center">
+                  <span className="text-[10px] font-black text-theme-muted uppercase tracking-widest mb-2 flex items-center gap-1.5">
+                    <span className="h-2 w-2 rounded-full bg-zinc-600" /> KTA BAGIAN BELAKANG (BACK)
+                  </span>
+                  
+                  <div 
+                    id="kta-back-card"
+                    className="w-full max-w-[480px] aspect-[1.581/1] rounded-[24px] overflow-hidden relative shadow-2xl border border-zinc-800 text-white select-none shrink-0"
+                    style={{ 
+                      background: 'repeating-linear-gradient(45deg, rgba(0,0,0,0.12) 0px, rgba(0,0,0,0.12) 2px, transparent 2px, transparent 6px), linear-gradient(135deg, #191919 0%, #0c0c0c 100%)',
+                      fontFamily: '"Inter", sans-serif'
+                    }}
+                  >
+                    {/* ACC Colors neon accents */}
+                    <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-red-600 via-zinc-800 to-red-600" />
+                    {/* Dark Magnetic Stripe at the top */}
+                    <div className="w-full h-[38px] bg-gradient-to-b from-zinc-950 to-black border-y border-zinc-800/40 absolute top-5 left-0" />
+                    
+                    {/* Content Section */}
+                    <div className="absolute top-[72px] left-5 right-5 bottom-4 flex justify-between gap-4">
+                      {/* Left: Standard Guidelines list */}
+                      <div className="flex-1 pr-2 min-w-0 flex flex-col justify-between">
+                        <div>
+                          <h5 className="text-[7.5px] font-black text-amber-500 uppercase tracking-widest border-b border-white/10 pb-0.5 mb-1.5">PERSYARATAN & KETENTUAN ANGGOTA</h5>
+                          <ol className="list-decimal list-inside text-[6px] text-zinc-400 font-semibold space-y-1 leading-snug">
+                            <li>KTA Digital ini sah merupakan tanda identitas resmi pemegang kartu di Auto Claser Club.</li>
+                            <li>Wajib mematuhi seluruh AD/ART klub serta mematuhi etika tertib berlalu lintas di jalan raya.</li>
+                            <li>Kartu ini tidak dapat dialih-tangankan Kepada pihak ketiga.</li>
+                            <li>Penyalahgunaan tanda keanggotaan ini dapat dikenakan sanksi tata tertib organisasi ACC.</li>
+                          </ol>
+                        </div>
+                        <p className="text-[5.5px] text-zinc-500 leading-normal font-medium mt-1">Jika menemukan kartu ini silakan kembalikan pada Sekretariat Pusat ACC Nasional.</p>
+                      </div>
+
+                      {/* Right: Signature stamp & QR Code */}
+                      <div className="w-[110px] shrink-0 flex flex-col items-center justify-between text-center pt-1 border-l border-white/5 pl-3">
+                        {/* Authorized Seal */}
+                        <div className="space-y-0.5 flex flex-col items-center">
+                          <span className="text-[5.5px] text-zinc-500 uppercase font-bold tracking-widest block leading-none">AUTHORIZED BY</span>
+                          {/* Beautiful SVG Signature */}
+                          <div className="h-6 w-14 relative flex items-center justify-center my-0.5">
+                            <svg className="w-full h-full text-blue-400/80 stroke-1" viewBox="0 0 100 40" fill="none" stroke="currentColor">
+                              <path d="M10,20 Q30,5 50,22 T90,15 M30,10 Q50,30 35,35 T65,15" strokeWidth="2.5" />
+                              <circle cx="50" cy="20" r="1.5" fill="currentColor" />
+                            </svg>
+                          </div>
+                          <span className="text-[7.5px] font-black text-zinc-300 tracking-wide block leading-none">KORWIL UTAMA</span>
+                        </div>
+
+                        {/* Miniature Authentication QR Code */}
+                        <div className="bg-white p-[3px] rounded-lg shadow-lg shrink-0 w-[50px] h-[50px] flex items-center justify-center border border-zinc-300">
+                          <svg className="w-full h-full text-black" viewBox="0 0 100 100" fill="currentColor">
+                            <path d="M0,0 h30 v30 h-30 z M10,10 h10 v10 h-10 z" />
+                            <path d="M70,0 h30 v30 h-30 z M80,10 h10 v10 h-10 z" />
+                            <path d="M0,70 h30 v30 h-30 z M10,80 h10 v10 h-10 z" />
+                            <path d="M40,0 h10 v10 h-10 z M55,10 h10 v10 h-10 z" />
+                            <path d="M40,35 h20 v10 h-20 z M35,55 h10 v20 h-10 z M55,55 h20 v10 h-20 z" />
+                            <path d="M70,40 h10 v20 h-10 z M85,75 h15 v25 h-15 z M45,85 h20 v15 h-20 z" />
+                            <circle cx="50" cy="50" r="5.5" className="text-red-600" />
+                          </svg>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Download Back action */}
+                  <button
+                    onClick={() => handleDownloadKTA('back')}
+                    className="w-full mt-3 flex items-center justify-center gap-1.5 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-white text-xs font-bold py-2 rounded-xl transition-all cursor-pointer"
+                  >
+                    📥 Unduh KTA Bagian Belakang (PNG)
+                  </button>
+                </div>
+
+              </div>
+
+              {/* ACTION COMMAND CENTER BAR */}
+              <div className="w-full flex flex-col sm:flex-row gap-3 pt-4 border-t border-theme-border/40 justify-center">
+                <button
+                  onClick={handlePrintKTA}
+                  className="flex items-center justify-center gap-2 bg-gradient-to-r from-theme-primary to-blue-600 hover:scale-[1.02] text-white font-extrabold text-xs uppercase tracking-wider px-6 py-3.5 rounded-2xl transition-all cursor-pointer shadow-lg w-full sm:w-auto"
+                >
+                  🖨️ Cetak KTA PDF / PVC
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSelectedKtaMember(null)}
+                  className="flex items-center justify-center bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-zinc-300 font-bold text-xs uppercase tracking-wider px-6 py-3.5 rounded-2xl transition-all cursor-pointer w-full sm:w-auto"
+                >
+                  Selesai
+                </button>
+              </div>
+
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }
