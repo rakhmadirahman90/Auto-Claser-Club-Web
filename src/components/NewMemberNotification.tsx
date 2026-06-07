@@ -92,7 +92,7 @@ export default function NewMemberNotification() {
                 <img
                   src={latestMember.imageUrl}
                   alt={latestMember.name}
-                  className="h-full w-full object-cover"
+                  className="h-full w-full object-cover object-top"
                   referrerPolicy="no-referrer"
                 />
               ) : (
@@ -170,7 +170,7 @@ export default function NewMemberNotification() {
                         <img
                           src={newMembers[currentProfileIndex].imageUrl}
                           alt={newMembers[currentProfileIndex].name}
-                          className="w-full h-full object-cover"
+                          className="w-full h-full object-cover object-top"
                           referrerPolicy="no-referrer"
                         />
                       ) : (

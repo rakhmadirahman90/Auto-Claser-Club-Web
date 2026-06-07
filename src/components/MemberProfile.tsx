@@ -9,7 +9,17 @@ export default function MemberProfile() {
   const [searchTerm, setSearchTerm] = useState('');
   const [currentIndex, setCurrentIndex] = useState(0);
 
-  const mergedProfiles = memberProfiles && memberProfiles.length > 0 ? memberProfiles : MEMBER_PROFILES;
+  const mergedProfiles = useMemo(() => {
+    const list = [...MEMBER_PROFILES];
+    if (memberProfiles && memberProfiles.length > 0) {
+      memberProfiles.forEach(newMember => {
+        if (!list.some(existing => existing.id === newMember.id || existing.membershipNumber === newMember.membershipNumber)) {
+          list.push(newMember);
+        }
+      });
+    }
+    return list;
+  }, [memberProfiles]);
 
   const filteredProfiles = useMemo(() => {
     const filtered = mergedProfiles.filter(member => 
@@ -22,7 +32,7 @@ export default function MemberProfile() {
         setCurrentIndex(0);
     }
     return filtered;
-  }, [searchTerm, currentIndex]);
+  }, [mergedProfiles, searchTerm, currentIndex]);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
@@ -63,12 +73,12 @@ export default function MemberProfile() {
               transition={{ duration: 0.3 }}
               className="bg-theme-surface border border-theme-border p-4 sm:p-6 rounded-3xl shadow-lg w-full max-w-sm md:max-w-md flex flex-col items-center max-h-full overflow-y-auto"
             >
-              <div className="w-full aspect-[4/3] mb-3 bg-gray-100 rounded-2xl overflow-hidden flex items-center justify-center shrink-0">
+              <div className="w-44 h-44 rounded-2xl overflow-hidden border-2 border-theme-border bg-theme-bg flex items-center justify-center shadow-md mb-4 shrink-0 relative">
                 {filteredProfiles[currentIndex].imageUrl ? (
                   <img 
                     src={filteredProfiles[currentIndex].imageUrl} 
                     alt={filteredProfiles[currentIndex].name} 
-                    className="w-full h-full object-contain" 
+                    className="w-full h-full object-cover object-top" 
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center bg-gray-200 text-gray-500 font-bold text-6xl">

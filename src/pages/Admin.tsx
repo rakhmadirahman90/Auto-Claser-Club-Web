@@ -932,7 +932,7 @@ export default function Admin() {
       return (
         <div className="bg-theme-surface border border-theme-border rounded-2xl p-4 text-center shadow-md max-w-sm mx-auto space-y-3">
           <div className="w-20 h-20 rounded-full border-2 border-theme-primary bg-theme-bg overflow-hidden mx-auto shadow-md">
-            <img src={memberImg} alt="Preview" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+            <img src={memberImg} alt="Preview" className="w-full h-full object-cover object-top" referrerPolicy="no-referrer" />
           </div>
           <div>
             <h4 className="font-extrabold text-sm text-theme-text leading-tight">{memberName}</h4>
@@ -1132,7 +1132,7 @@ export default function Admin() {
             subtitle = item.role;
             avatarDisplay = item.imageUrl && item.imageUrl.trim() !== '' ? (
               <div className="h-10 w-10 rounded-xl overflow-hidden shrink-0 border border-theme-border/50 bg-theme-bg/40 flex items-center justify-center">
-                <img src={item.imageUrl} alt="" className="h-full w-full object-cover" referrerPolicy="no-referrer" />
+                <img src={item.imageUrl} alt="" className="h-full w-full object-cover object-top" referrerPolicy="no-referrer" />
               </div>
             ) : (
               <div className="h-10 w-10 shrink-0 rounded-xl bg-gradient-to-br from-indigo-500/10 to-purple-500/15 text-theme-primary flex items-center justify-center font-black text-xs">
@@ -1172,7 +1172,7 @@ export default function Admin() {
             subtitle = `${item.vehicleType || ''} • ${item.licensePlate || ''}`;
             avatarDisplay = item.imageUrl && item.imageUrl.trim() !== '' ? (
               <div className="h-10 w-10 rounded-xl overflow-hidden shrink-0 border border-theme-border/50 bg-theme-bg/40 flex items-center justify-center">
-                <img src={item.imageUrl} alt="" className="h-full w-full object-cover" referrerPolicy="no-referrer" />
+                <img src={item.imageUrl} alt="" className="h-full w-full object-cover object-top" referrerPolicy="no-referrer" />
               </div>
             ) : (
                 <div className="h-10 w-10 shrink-0 rounded-xl bg-gradient-to-br from-amber-500/10 to-orange-500/15 text-amber-600 flex items-center justify-center font-black text-xs">
@@ -1190,7 +1190,7 @@ export default function Admin() {
             subtitle = `${item.vehicleType || ''} • ${item.phone || ''}`;
             avatarDisplay = item.photo && item.photo.trim() !== '' ? (
               <div className="h-10 w-10 rounded-xl overflow-hidden shrink-0 border border-theme-border/50 bg-theme-bg/40 flex items-center justify-center">
-                <img src={item.photo} alt="" className="h-full w-full object-cover" referrerPolicy="no-referrer" />
+                <img src={item.photo} alt="" className="h-full w-full object-cover object-top" referrerPolicy="no-referrer" />
               </div>
             ) : (
                 <div className="h-10 w-10 shrink-0 rounded-xl bg-gradient-to-br from-blue-500/10 to-cyan-500/15 text-blue-600 flex items-center justify-center font-black text-xs">
