@@ -10,6 +10,7 @@ import CalendarACC from '../components/CalendarACC';
 import News from '../components/News';
 import Join from '../components/Join';
 import Footer from '../components/Footer';
+import NewMemberNotification from '../components/NewMemberNotification';
 
 export default function Home() {
   const location = useLocation();
@@ -58,6 +59,7 @@ export default function Home() {
   return (
     <div className="h-[100dvh] w-full bg-theme-bg text-theme-text font-sans selection:bg-theme-primary/30 flex flex-col overflow-hidden">
       <Navbar />
+      <NewMemberNotification />
       {/* Main Content Area with transition */}
       <main ref={mainRef} className="flex-1 overflow-y-auto relative flex flex-col w-full min-h-0">
         <div className="flex-1 flex flex-col w-full min-h-full">
