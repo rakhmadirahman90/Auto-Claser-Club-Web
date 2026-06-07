@@ -2,9 +2,11 @@ import React from 'react';
 import { Calendar, MapPin } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useData } from '../context/DataContext';
+import { ACTIVITIES } from '../data';
 
 export default function Activities() {
-  const { activities } = useData();
+  const { activities: dbActivities } = useData();
+  const activities = [...ACTIVITIES.filter(s => !dbActivities?.find(f => f.id === s.id)), ...(dbActivities || [])];
 
   return (
     <section id="activities" className="py-8 sm:py-16 md:py-24 bg-theme-bg flex-1 flex flex-col justify-start md:justify-center">

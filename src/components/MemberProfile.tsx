@@ -2,16 +2,21 @@ import React, { useState, useMemo } from 'react';
 import { MEMBER_PROFILES } from '../data';
 import { ChevronLeft, ChevronRight, Search } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { useData } from '../context/DataContext';
 
 export default function MemberProfile() {
+  const { memberProfiles } = useData();
   const [searchTerm, setSearchTerm] = useState('');
   const [currentIndex, setCurrentIndex] = useState(0);
 
+  const mergedProfiles = memberProfiles && memberProfiles.length > 0 ? memberProfiles : MEMBER_PROFILES;
+
   const filteredProfiles = useMemo(() => {
-    const filtered = MEMBER_PROFILES.filter(member => 
+    const filtered = mergedProfiles.filter(member => 
       member.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       member.car.toLowerCase().includes(searchTerm.toLowerCase())
     );
+
     // Reset index if filtered results change
     if (currentIndex >= filtered.length) {
         setCurrentIndex(0);
@@ -59,11 +64,17 @@ export default function MemberProfile() {
               className="bg-theme-surface border border-theme-border p-4 sm:p-6 rounded-3xl shadow-lg w-full max-w-sm md:max-w-md flex flex-col items-center max-h-full overflow-y-auto"
             >
               <div className="w-full aspect-[4/3] mb-3 bg-gray-100 rounded-2xl overflow-hidden flex items-center justify-center shrink-0">
-                <img 
-                  src={filteredProfiles[currentIndex].imageUrl} 
-                  alt={filteredProfiles[currentIndex].name} 
-                  className="w-full h-full object-contain" 
-                />
+                {filteredProfiles[currentIndex].imageUrl ? (
+                  <img 
+                    src={filteredProfiles[currentIndex].imageUrl} 
+                    alt={filteredProfiles[currentIndex].name} 
+                    className="w-full h-full object-contain" 
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center bg-gray-200 text-gray-500 font-bold text-6xl">
+                    {filteredProfiles[currentIndex].name.substring(0, 2).toUpperCase()}
+                  </div>
+                )}
               </div>
               <h3 className="font-bold text-xl sm:text-2xl text-theme-text mb-1 truncate w-full text-center">{filteredProfiles[currentIndex].name}</h3>
               <p className="text-theme-primary text-xs sm:text-sm font-semibold mb-3">{filteredProfiles[currentIndex].role}</p>

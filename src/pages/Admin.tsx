@@ -3,7 +3,7 @@ import { useData } from '../context/DataContext';
 import { 
   Plus, Edit2, Trash2, ArrowLeft, LogOut, Database, 
   Home, Info, UserPlus, Bell, FileText, Calendar, 
-  MapPin, Users, ClipboardList, Search, X, Eye, EyeOff, ThumbsUp, User 
+  MapPin, Users, ClipboardList, Search, X, Eye, EyeOff, ThumbsUp, User, CheckCircle, MessageCircle 
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { logout, auth, db } from '../firebase';
@@ -342,6 +342,84 @@ export default function Admin() {
       success: 'Data sukses terhapus!',
       error: 'Gagal menghapus data dari Firestore.'
     });
+  };
+
+  const handleVerifyRegistration = async (reg: Registration) => {
+    try {
+      const membershipNumber = 'ACC-' + Math.floor(1000 + Math.random() * 9000).toString();
+      const newMemberProfile: MemberProfile = {
+        id: Date.now().toString(),
+        name: reg.name || 'Anggota Baru',
+        role: 'Anggota Resmi',
+        imageUrl: '',
+        car: reg.vehicleType || 'Belum diatur',
+        licensePlate: reg.licensePlate || 'Belum diatur',
+        yearJoined: new Date().getFullYear().toString(),
+        membershipNumber: membershipNumber,
+        phone: reg.phone
+      };
+
+      await toast.promise(
+        Promise.all([
+          addMemberProfile(newMemberProfile),
+          deleteRegistration(reg.id!)
+        ]),
+        {
+          loading: 'Memverifikasi Anggota...',
+          success: 'Anggota berhasil diverifikasi dan ditambahkan ke profil!',
+          error: 'Gagal memverifikasi anggota.'
+        }
+      );
+
+      // Open WhatsApp notification
+      const message = `Halo ${reg.name},\n\nSelamat! Pendaftaran Anda di komunitas *Auto Claser Club (ACC)* telah *BERHASIL* diverifikasi oleh Admin.\n\nBerikut adalah Nomor Keanggotaan resmi Anda:\n*${membershipNumber}*\n\nSelamat bergabung dan salam solidaritas!`;
+      let phoneNumber = reg.phone.replace(/[^0-9]/g, '');
+      // Ensure phone number starts with country code, assume Indonesia (62) if starts with 0
+      if (phoneNumber.startsWith('0')) {
+        phoneNumber = '62' + phoneNumber.substring(1);
+      }
+      const waUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
+      
+      try {
+        const link = document.createElement('a');
+        link.href = waUrl;
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      } catch (e) {
+        console.warn('Could not auto-open WhatsApp link.');
+      }
+
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleResendWA = (member: MemberProfile) => {
+    if (!member.phone) {
+      toast.error('Tidak ada nomor WhatsApp yang tersimpan untuk anggota ini.');
+      return;
+    }
+    const message = `Halo ${member.name},\n\nSelamat! Pendaftaran Anda di komunitas *Auto Claser Club (ACC)* telah *BERHASIL* diverifikasi oleh Admin.\n\nBerikut adalah Nomor Keanggotaan resmi Anda:\n*${member.membershipNumber}*\n\nSelamat bergabung dan salam solidaritas!`;
+    let phoneNumber = member.phone.replace(/[^0-9]/g, '');
+    if (phoneNumber.startsWith('0')) {
+      phoneNumber = '62' + phoneNumber.substring(1);
+    }
+    const waUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
+    
+    try {
+      const link = document.createElement('a');
+      link.href = waUrl;
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (e) {
+      console.warn('Could not auto-open WhatsApp link.');
+    }
   };
 
   const handleSeedData = async () => {    
@@ -695,6 +773,10 @@ export default function Admin() {
               <input className="w-full bg-theme-bg border border-theme-border p-3 rounded-xl text-theme-text text-sm focus:outline-none focus:ring-2 focus:ring-theme-primary/30 focus:border-theme-primary transition-all duration-200" placeholder="Contoh: KTA-2020-001" value={formData.membershipNumber || ''} onChange={e => setFormData({...formData, membershipNumber: e.target.value})} />
             </div>
             <div>
+              <label className="block text-xs font-bold tracking-wider text-theme-muted uppercase mb-1.5">No. WhatsApp</label>
+              <input className="w-full bg-theme-bg border border-theme-border p-3 rounded-xl text-theme-text text-sm focus:outline-none focus:ring-2 focus:ring-theme-primary/30 focus:border-theme-primary transition-all duration-200" placeholder="Contoh: 08123456789" value={formData.phone || ''} onChange={e => setFormData({...formData, phone: e.target.value})} />
+            </div>
+            <div>
               <label className="block text-xs font-bold tracking-wider text-theme-muted uppercase mb-1.5">Mobil</label>
               <input className="w-full bg-theme-bg border border-theme-border p-3 rounded-xl text-theme-text text-sm focus:outline-none focus:ring-2 focus:ring-theme-primary/30 focus:border-theme-primary transition-all duration-200" placeholder="Contoh: Toyota Avanza" value={formData.car || ''} onChange={e => setFormData({...formData, car: e.target.value})} />
             </div>
@@ -1044,7 +1126,7 @@ export default function Admin() {
 
           if (activeTab === 'committee') {
             subtitle = item.role;
-            avatarDisplay = item.imageUrl ? (
+            avatarDisplay = item.imageUrl && item.imageUrl.trim() !== '' ? (
               <div className="h-10 w-10 rounded-xl overflow-hidden shrink-0 border border-theme-border/50 bg-theme-bg/40 flex items-center justify-center">
                 <img src={item.imageUrl} alt="" className="h-full w-full object-cover" referrerPolicy="no-referrer" />
               </div>
@@ -1055,7 +1137,7 @@ export default function Admin() {
             );
           } else if (activeTab === 'posts') {
             subtitle = `${item.category || 'Berita'} • ${item.date || ''}`;
-            avatarDisplay = item.imageUrl ? (
+            avatarDisplay = item.imageUrl && item.imageUrl.trim() !== '' ? (
               <div className="h-10 w-10 rounded-xl overflow-hidden shrink-0 border border-theme-border/50 bg-theme-bg/40 flex items-center justify-center">
                 <img src={item.imageUrl} alt="" className="h-full w-full object-cover" referrerPolicy="no-referrer" />
               </div>
@@ -1066,7 +1148,7 @@ export default function Admin() {
             );
           } else if (activeTab === 'activities') {
             subtitle = `${item.location || ''} • ${item.date || ''}`;
-            avatarDisplay = item.imageUrl ? (
+            avatarDisplay = item.imageUrl && item.imageUrl.trim() !== '' ? (
               <div className="h-10 w-10 rounded-xl overflow-hidden shrink-0 border border-theme-border/50 bg-theme-bg/40 flex items-center justify-center">
                 <img src={item.imageUrl} alt="" className="h-full w-full object-cover" referrerPolicy="no-referrer" />
               </div>
@@ -1084,7 +1166,7 @@ export default function Admin() {
             );
           } else if (activeTab === 'profile') {
             subtitle = `${item.vehicleType || ''} • ${item.licensePlate || ''}`;
-            avatarDisplay = item.imageUrl ? (
+            avatarDisplay = item.imageUrl && item.imageUrl.trim() !== '' ? (
               <div className="h-10 w-10 rounded-xl overflow-hidden shrink-0 border border-theme-border/50 bg-theme-bg/40 flex items-center justify-center">
                 <img src={item.imageUrl} alt="" className="h-full w-full object-cover" referrerPolicy="no-referrer" />
               </div>
@@ -1099,6 +1181,13 @@ export default function Admin() {
               <div className="h-10 w-10 shrink-0 rounded-xl bg-gradient-to-br from-red-500/10 to-pink-500/15 text-red-500 flex items-center justify-center font-black text-xs">
                 📅
               </div>
+            );
+          } else if (activeTab === 'registrations') {
+            subtitle = `${item.vehicleType || ''} • ${item.phone || ''}`;
+            avatarDisplay = (
+                <div className="h-10 w-10 shrink-0 rounded-xl bg-gradient-to-br from-blue-500/10 to-cyan-500/15 text-blue-600 flex items-center justify-center font-black text-xs">
+                  {item.name.substring(0, 2).toUpperCase()}
+                </div>
             );
           }
 
@@ -1124,6 +1213,24 @@ export default function Admin() {
                 </div>
               </div>
               <div className="flex gap-1.5 shrink-0 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity ml-2">
+                {activeTab === 'registrations' && (
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); handleVerifyRegistration(item); }} 
+                    className="w-8 h-8 flex items-center justify-center bg-green-500/10 hover:bg-green-500 text-green-500 hover:text-white rounded-lg transition-all"
+                    title="Verifikasi & Tambahkan ke Profil Anggota"
+                  >
+                    <CheckCircle size={13} />
+                  </button>
+                )}
+                {activeTab === 'profile' && item.phone && (
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); handleResendWA(item); }} 
+                    className="w-8 h-8 flex items-center justify-center bg-blue-500/10 hover:bg-blue-500 text-blue-500 hover:text-white rounded-lg transition-all"
+                    title="Kirim ulang verifikasi WhatsApp"
+                  >
+                    <MessageCircle size={13} />
+                  </button>
+                )}
                 <button 
                   onClick={(e) => { e.stopPropagation(); handleEdit(item.id, item); }} 
                   className="w-8 h-8 flex items-center justify-center bg-theme-primary/10 hover:bg-theme-primary text-theme-primary hover:text-white rounded-lg transition-all"
@@ -1199,13 +1306,22 @@ export default function Admin() {
                     <h3 className="font-extrabold text-sm text-theme-text truncate leading-tight">{reg.name}</h3>
                     <p className="text-xs font-mono text-theme-primary mt-1 font-semibold">{reg.phone}</p>
                   </div>
-                  <button 
-                    onClick={() => handleDelete(reg.id)}
-                    className="shrink-0 text-theme-secondary hover:text-red-500 bg-theme-secondary/10 hover:bg-theme-secondary/25 p-1.5 rounded-lg transition-colors scale-90"
-                    title="Hapus pendaftar"
-                  >
-                    <Trash2 size={13} />
-                  </button>
+                  <div className="flex gap-1.5 shrink-0">
+                    <button 
+                      onClick={() => handleVerifyRegistration(reg)}
+                      className="text-theme-primary hover:text-white bg-theme-primary/10 hover:bg-theme-primary p-1.5 rounded-lg transition-colors scale-90"
+                      title="Verifikasi & Tambahkan ke Profil Anggota"
+                    >
+                      <CheckCircle size={13} />
+                    </button>
+                    <button 
+                      onClick={() => handleDelete(reg.id!)}
+                      className="text-theme-secondary hover:text-red-500 bg-theme-secondary/10 hover:bg-theme-secondary/25 p-1.5 rounded-lg transition-colors scale-90"
+                      title="Hapus pendaftar"
+                    >
+                      <Trash2 size={13} />
+                    </button>
+                  </div>
                 </div>
                 
                 <div className="space-y-2.5 text-xs">
@@ -1262,17 +1378,17 @@ export default function Admin() {
   ];
 
   const dataList = activeTab === 'posts' 
-    ? (posts.length > 0 ? posts : BLOG_POSTS) 
+    ? [...BLOG_POSTS.filter(s => !posts.find(f => f.id === s.id)), ...posts]
     : activeTab === 'activities' 
-      ? (activities.length > 0 ? activities : ACTIVITIES) 
+      ? [...ACTIVITIES.filter(s => !activities.find(f => f.id === s.id)), ...activities]
       : activeTab === 'committee' 
-        ? (committee.length > 0 ? committee : COMMITTEE_MEMBERS) 
+        ? [...COMMITTEE_MEMBERS.filter(s => !committee.find(f => f.id === s.id)), ...committee]
         : activeTab === 'chapters'
-          ? (chapters.length > 0 ? chapters : CHAPTERS)
+          ? [...CHAPTERS.filter(s => !chapters.find(f => f.id === s.id)), ...chapters]
           : activeTab === 'profile'
-            ? (memberProfiles.length > 0 ? memberProfiles : MEMBER_PROFILES)
+            ? [...MEMBER_PROFILES.filter(s => !memberProfiles.find(f => f.id === s.id)), ...memberProfiles]
             : activeTab === 'calendar'
-              ? (calendarEvents && calendarEvents.length > 0 ? calendarEvents : CALENDAR_EVENTS)
+              ? [...CALENDAR_EVENTS.filter(s => !calendarEvents.find(f => f.id === s.id)), ...calendarEvents]
               : registrations;
 
   const filteredDataList = dataList.filter((item: any) => {
@@ -1443,7 +1559,7 @@ export default function Admin() {
                         {editingId === 'new' ? 'Entri Data Baru' : 'Ubah Detail Konten'}
                       </h2>
                       <p className="text-[10px] font-black uppercase text-theme-primary tracking-widest mt-0.5">
-                        Kategori: {activeTab === 'posts' ? 'Berita' : activeTab === 'activities' ? 'Agenda Acara' : activeTab === 'chapters' ? 'Regional Chapter' : activeTab === 'registrations' ? 'Data Pendaftar' : 'Anggota Pengurus'}
+                        Kategori: {activeTab === 'posts' ? 'Berita' : activeTab === 'activities' ? 'Agenda Acara' : activeTab === 'chapters' ? 'Regional Chapter' : activeTab === 'profile' ? 'Profil Anggota' : activeTab === 'calendar' ? 'Kalender' : 'Anggota Pengurus'}
                       </p>
                     </div>
                     {/* prominent back button on mobile view */}

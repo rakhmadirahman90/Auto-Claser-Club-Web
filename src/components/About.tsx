@@ -201,7 +201,7 @@ export default function About() {
   };
 
   const renderStruktur = () => {
-    const committeeList = committee && committee.length > 0 ? committee : COMMITTEE_MEMBERS;
+    const committeeList = [...COMMITTEE_MEMBERS.filter(s => !committee?.find(f => f.id === s.id)), ...(committee || [])];
 
     // Filter to find President (role containing "President" or "Ketua Umum" or first element if neither found)
     const president = committeeList.find(m => m.role.toLowerCase().includes('president') || m.role.toLowerCase().includes('ketua umum')) || committeeList[0];

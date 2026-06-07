@@ -7,6 +7,7 @@ export interface MemberProfile {
   licensePlate: string;
   yearJoined: string;
   membershipNumber: string;
+  phone?: string;
 }
 
 export interface BlogPost {

@@ -7,7 +7,7 @@ import toast from 'react-hot-toast';
 
 export default function News() {
   const { posts: dbPosts, likePost, viewPost } = useData();
-  const posts = dbPosts.length > 0 ? dbPosts : BLOG_POSTS;
+  const posts = [...BLOG_POSTS.filter(s => !dbPosts?.find(f => f.id === s.id)), ...(dbPosts || [])];
 
   const [selectedPost, setSelectedPost] = useState<any>(null);
   const [likedPosts, setLikedPosts] = useState<Record<string, boolean>>({});

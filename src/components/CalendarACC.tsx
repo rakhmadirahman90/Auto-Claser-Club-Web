@@ -5,7 +5,7 @@ import { calendarEvents as CALENDAR_EVENTS } from '../data/calendarEvents';
 
 export default function CalendarACC() {
   const { calendarEvents: dbEvents } = useData();
-  const calendarEvents = dbEvents && dbEvents.length > 0 ? dbEvents : CALENDAR_EVENTS;
+  const calendarEvents = [...CALENDAR_EVENTS.filter(s => !dbEvents?.find(f => f.id === s.id)), ...(dbEvents || [])];
   const currentYear = new Date().getFullYear();
   const [selectedDayEvents, setSelectedDayEvents] = useState<{ day: number; monthIndex: number; events: any[] } | null>(null);
   const months = [
