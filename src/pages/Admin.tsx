@@ -1474,7 +1474,16 @@ export default function Admin() {
         : activeTab === 'chapters'
           ? [...CHAPTERS.filter(s => !chapters.find(f => f.id === s.id)), ...chapters]
           : activeTab === 'profile'
-            ? [...MEMBER_PROFILES.filter(s => !memberProfiles.find(f => f.id === s.id)), ...memberProfiles]
+            ? (() => {
+                const staticList = MEMBER_PROFILES.map(staticMember => {
+                  const override = memberProfiles.find(f => f.id === staticMember.id);
+                  return override ? { ...staticMember, ...override } : staticMember;
+                });
+                const customList = memberProfiles.filter(firestoreMember => {
+                  return !MEMBER_PROFILES.some(staticMember => staticMember.id === firestoreMember.id);
+                });
+                return [...staticList, ...customList].filter(m => !m.isDeleted);
+              })()
             : activeTab === 'calendar'
               ? [...CALENDAR_EVENTS.filter(s => !calendarEvents.find(f => f.id === s.id)), ...calendarEvents]
               : registrations;
@@ -1860,7 +1869,7 @@ export default function Admin() {
                 
                 <div class="print-page flex flex-col items-center justify-center">
                   <div class="scale-110 origin-center pointer-events-none">
-                    <div class="w-[500px] h-[316px] rounded-[24px] overflow-hidden relative shadow-2xl border border-amber-500/30 text-white select-none relative" style="background: repeating-linear-gradient(45deg, rgba(0,0,0,0.15) 0px, rgba(0,0,0,0.15) 2px, transparent 2px, transparent 6px), linear-gradient(135deg, #222 0%, #111 100%);">
+                    <div class="w-[500px] h-[316px] rounded-[24px] overflow-hidden relative shadow-2xl border border-amber-500/30 text-white select-none relative" style="background: linear-gradient(135deg, #0a0a0c 0%, #1b1204 50%, #0a0a0c 100%);">
                       ${frontHtml}
                     </div>
                   </div>
@@ -1869,7 +1878,7 @@ export default function Admin() {
 
                 <div class="print-page flex flex-col items-center justify-center">
                   <div class="scale-110 origin-center pointer-events-none">
-                    <div class="w-[500px] h-[316px] rounded-[24px] overflow-hidden relative shadow-2xl border border-amber-500/30 text-white select-none relative" style="background: repeating-linear-gradient(45deg, rgba(0,0,0,0.15) 0px, rgba(0,0,0,0.15) 2px, transparent 2px, transparent 6px), linear-gradient(135deg, #1e1e1e 0%, #0d0d0d 100%);">
+                    <div class="w-[500px] h-[316px] rounded-[24px] overflow-hidden relative shadow-2xl border border-zinc-800 text-white select-none relative" style="background: linear-gradient(135deg, #0a0a0a 0%, #141416 50%, #070708 100%);">
                       ${backHtml}
                     </div>
                   </div>
@@ -2012,112 +2021,127 @@ export default function Admin() {
                   
                   <div 
                     id="kta-front-card"
-                    className="w-full max-w-[480px] aspect-[1.581/1] rounded-[24px] overflow-hidden relative shadow-2xl border border-amber-500/30 text-white select-none shrink-0"
+                    className="w-full max-w-[480px] aspect-[1.586/1] rounded-[24px] overflow-hidden relative shadow-2xl border border-amber-500/25 bg-gradient-to-br from-neutral-950 via-[#1b1204] to-neutral-900 text-white select-none shrink-0 flex flex-col justify-between p-4 sm:p-5"
                     style={{ 
-                      background: 'repeating-linear-gradient(45deg, rgba(0,0,0,0.1) 0px, rgba(0,0,0,0.1) 2px, transparent 2px, transparent 6px), linear-gradient(135deg, #1f1f1f 0%, #111111 100%)',
                       fontFamily: '"Inter", sans-serif'
                     }}
                   >
-                    {/* Metallic glow accents */}
-                    <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-red-600 via-amber-500 to-rose-600" />
-                    <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/[0.03] to-white/[0.08] pointer-events-none" />
-
-                    {/* Logo & Banner Section */}
-                    <div className="absolute top-4 left-5 right-5 flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        {/* Custom Red Sports Car Emblem Logo SVG */}
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-red-600 to-rose-700 flex items-center justify-center border border-white/20 shadow-md">
-                          <svg className="w-4 h-4 text-white" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z" />
-                          </svg>
-                        </div>
+                    {/* Card Holographic watermark overlay */}
+                    <div className="absolute top-0 right-0 w-[150%] h-[150%] -translate-y-1/2 translate-x-1/3 bg-[radial-gradient(circle_at_bottom_left,transparent_40%,rgba(245,158,11,0.06)_50%,transparent_60%)] -rotate-12 pointer-events-none" />
+                    
+                    {/* Header section with Logo & Club Name */}
+                    <div className="flex justify-between items-start shrink-0 relative z-10 border-b border-amber-500/25 pb-1.5 sm:pb-2">
+                      <div className="flex items-center gap-1.5 sm:gap-2">
+                        <img 
+                          src="/logo.jpg" 
+                          alt="ACC Logo" 
+                          className="h-8 sm:h-9 w-auto object-contain rounded-md bg-white p-0.5 border border-amber-500/20 shadow-md" 
+                        />
                         <div>
-                          <h4 className="text-xs font-black tracking-widest text-white leading-none font-mono">AUTO CLASER CLUB</h4>
-                          <span className="text-[6.5px] font-black text-amber-500 tracking-wider font-mono">EST. 2018 • SULAWESI INDONESIA</span>
+                          <h3 className="font-extrabold tracking-widest text-amber-500 text-[10px] sm:text-[11.5px] leading-none uppercase">
+                            Auto Claser Club
+                          </h3>
+                          <p className="text-[6px] sm:text-[7px] tracking-widest text-neutral-400 font-mono italic mt-1 leading-none">
+                            LOYALITAS TANPA BATAS
+                          </p>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <span className="text-[7.5px] font-black bg-gradient-to-r from-amber-500 to-orange-500 text-black px-2 py-0.5 rounded border border-amber-500/20 uppercase tracking-widest block leading-none">
-                          {m.role && m.role.toLowerCase().includes('anggota') ? 'MEMBER' : 'OFFICIAL'}
+
+                      <div className="flex flex-col items-end">
+                        <span className="text-[6.5px] sm:text-[7px] bg-amber-500 text-black px-1.5 py-0.5 rounded font-black font-sans leading-none shadow">
+                          KTA TERPADU
+                        </span>
+                        <span className="text-[5px] sm:text-[6px] text-amber-500 font-mono mt-1 font-bold tracking-widest leading-none">
+                          INDONESIA
                         </span>
                       </div>
                     </div>
 
-                    {/* Member Details Layout */}
-                    <div className="absolute top-[68px] left-5 right-5 bottom-4 flex gap-4">
-                      {/* Left Block: Profile Photo Embedded */}
-                      <div className="flex flex-col items-center justify-between h-full shrink-0 w-[100px]">
-                        <div className="w-[85px] h-[105px] rounded-xl overflow-hidden border-2 border-amber-500/75 bg-black/40 shadow-[0_0_15px_rgba(239,68,68,0.3)] flex items-center justify-center relative">
-                          {m.imageUrl && m.imageUrl.trim() !== '' ? (
-                            <img 
-                              src={m.imageUrl} 
-                              alt={m.name} 
-                              className="h-full w-full object-cover object-top" 
-                              referrerPolicy="no-referrer" 
-                            />
-                          ) : (
-                            <div className="h-full w-full bg-gradient-to-br from-theme-surface to-slate-800 flex items-center justify-center text-amber-500 text-xl font-black">
-                              {m.name.split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase()}
-                            </div>
-                          )}
-                        </div>
-                        {/* Real Smartcard gold Chip SVG */}
-                        <div className="w-[44px] h-[32px] rounded-md bg-gradient-to-r from-amber-400 via-amber-300 to-yellow-500 flex items-center justify-center border border-amber-600/50 p-1 shadow">
-                          <svg className="w-full h-full text-amber-800/80" viewBox="0 0 100 80">
-                            <rect x="5" y="5" width="90" height="70" rx="10" fill="none" stroke="currentColor" strokeWidth="4" />
-                            <line x1="25" y1="5" x2="25" y2="75" stroke="currentColor" strokeWidth="3" />
-                            <line x1="50" y1="5" x2="50" y2="75" stroke="currentColor" strokeWidth="3" />
-                            <line x1="75" y1="5" x2="75" y2="75" stroke="currentColor" strokeWidth="3" />
-                            <line x1="5" y1="25" x2="95" y2="25" stroke="currentColor" strokeWidth="3" />
-                            <line x1="5" y1="55" x2="95" y2="55" stroke="currentColor" strokeWidth="3" />
-                            <circle cx="50" cy="40" r="10" fill="currentColor" />
-                          </svg>
-                        </div>
+                    {/* Profile details & Live Digital balances HUD panel */}
+                    <div className="flex gap-2.5 sm:gap-3 items-center flex-1 my-1.5 sm:my-2 min-h-0 relative z-10">
+                      
+                      {/* Photo frame */}
+                      <div className="relative w-12 h-15 sm:w-[54px] sm:h-[68px] rounded-lg overflow-hidden border border-amber-500/40 bg-neutral-900 shrink-0 shadow-md">
+                        {m.imageUrl && m.imageUrl.trim() !== '' ? (
+                          <img 
+                            src={m.imageUrl} 
+                            alt={m.name} 
+                            className="w-full h-full object-cover object-top" 
+                            referrerPolicy="no-referrer"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center bg-amber-950 text-[#f59e0b] font-bold text-xs sm:text-base">
+                            {m.name.substring(0,2).toUpperCase()}
+                          </div>
+                        )}
+                        {/* Smart active pulse light */}
+                        <div className="absolute top-0.5 right-0.5 w-1 h-1 sm:w-1.5 sm:h-1.5 bg-emerald-500 rounded-full border border-black shadow animate-pulse" />
                       </div>
 
-                      {/* Right Block: Personal Fields */}
-                      <div className="flex-1 min-w-0 flex flex-col justify-between h-full pt-1">
-                        <div>
-                          <span className="text-[6.5px] font-extrabold text-theme-primary tracking-widest block leading-none uppercase">KARTU TANDA ANGGOTA DIGITAL</span>
-                          <h3 className="text-sm font-black text-white truncate leading-tight tracking-wide mt-0.5" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>
-                            {m.name.toUpperCase()}
-                          </h3>
+                      {/* Profile Information & Integrated HUD Details */}
+                      <div className="flex-1 flex flex-col justify-center min-h-0 space-y-0.5">
+                        <div className="truncate text-[11px] sm:text-xs md:text-sm font-black text-amber-500 font-sans tracking-wide leading-none">
+                          {m.name}
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <span className="text-[5.5px] sm:text-[6px] px-1 py-0.2 bg-amber-500/10 text-amber-500 rounded border border-amber-500/20 uppercase font-black tracking-wide leading-none">
+                            {m.role || "ANGGOTA"}
+                          </span>
                         </div>
 
-                        {/* ID card details grids */}
-                        <div className="grid grid-cols-2 gap-x-3 gap-y-2.5 bg-black/50 p-2.5 border border-white/5 rounded-xl">
+                        {/* INTEGRATED LIVE WALLET DATA (ACC Pay & BBM) */}
+                        <div className="border-t border-neutral-800/80 pt-1 mt-1 grid grid-cols-2 gap-x-1.5 gap-y-0.5 text-neutral-300">
                           <div>
-                            <span className="text-[6.5px] text-zinc-400 uppercase tracking-wider block font-bold leading-none">NO. ANGGOTA (KTA)</span>
-                            <span className="text-[10px] font-black text-amber-400 font-mono tracking-wider block leading-none mt-1">
-                              {m.membershipNumber || `ACC-KTA-${m.id}`}
+                            <span className="block text-[5px] sm:text-[5.5px] text-neutral-500 leading-none uppercase">💳 ACC Pay (e-Toll)</span>
+                            <span className="font-bold text-[8.5px] sm:text-[9.5px] text-amber-400 font-mono leading-none">
+                              Rp150.000
                             </span>
                           </div>
                           <div>
-                            <span className="text-[6.5px] text-zinc-400 uppercase tracking-wider block font-bold leading-none">PLAT NOMOR</span>
-                            <span className="text-[9.5px] font-mono font-black text-white flex items-center gap-1 mt-1 leading-none">
-                              <span className="bg-zinc-800 text-white border border-zinc-700 px-1 py-[1.5px] rounded text-[8px] font-black">ID</span>
-                              {m.licensePlate || '-'}
+                            <span className="block text-[5px] sm:text-[5.5px] text-neutral-500 leading-none uppercase">⛽ Kuota Pertalite</span>
+                            <span className="font-bold text-[8.5px] sm:text-[9.5px] text-emerald-400 font-mono leading-none">
+                              40 L / Hari
                             </span>
                           </div>
-                          <div>
-                            <span className="text-[6.5px] text-zinc-400 uppercase tracking-wider block font-bold leading-none">KENDARAAN</span>
-                            <span className="text-[9px] font-bold text-white truncate block leading-none mt-1">
-                              {m.car || '-'}
-                            </span>
-                          </div>
-                          <div>
-                            <span className="text-[6.5px] text-zinc-400 uppercase tracking-wider block font-bold leading-none">REGIONAL STATUS</span>
-                            <span className="text-[8px] font-black text-emerald-400 truncate block uppercase leading-none mt-1">
-                              {m.role || 'ANGGOTA'}
-                            </span>
+                          <div className="col-span-2 grid grid-cols-2 gap-1 border-t border-neutral-900 pt-1 text-[5.5px] sm:text-[6.5px] font-mono text-neutral-400">
+                            <div>
+                              <span className="text-neutral-500 block leading-none text-[4.5px] sm:text-[5px]">PLAT MOBIL</span>
+                              <span className="text-white font-bold leading-none">{m.licensePlate || "N/A"}</span>
+                            </div>
+                            <div>
+                              <span className="text-neutral-500 block leading-none text-[4.5px] sm:text-[5px]">UNIT MOBIL</span>
+                              <span className="text-neutral-200 font-bold leading-none truncate block">{m.car || "N/A"}</span>
+                            </div>
                           </div>
                         </div>
 
-                        {/* Card metadata footer containing Joined text */}
-                        <div className="flex items-center justify-between text-[7px] text-zinc-400">
-                          <span className="font-extrabold">STATUS: <span className="text-emerald-400 font-black">● AKTIF RESMI</span></span>
-                          <span className="font-extrabold">BERGABUNG: <span className="text-white font-black">{m.yearJoined || '2022'}</span></span>
+                      </div>
+                    </div>
+
+                    {/* Bottom card metrics representing NFC copper interface */}
+                    <div className="flex justify-between items-end shrink-0 relative z-10 border-t border-amber-500/20 pt-1 sm:pt-1.5">
+                      {/* Smart Card Chip Visual */}
+                      <div className="flex items-center gap-1">
+                        <div className="w-5 h-3.5 rounded bg-gradient-to-br from-amber-200 via-[#f59e0b] to-yellow-600 border border-amber-600/40 relative overflow-hidden flex flex-col justify-around p-0.5 shadow-inner">
+                          <div className="grid grid-cols-3 gap-0.5 h-full opacity-60">
+                            {[...Array(6)].map((_, i) => <div key={i} className="border border-amber-900/20 rounded-[1px] bg-amber-200/50" />)}
+                          </div>
                         </div>
+                        {/* Wave Contactless Symbol */}
+                        <svg className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-amber-500/70" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                        </svg>
+                      </div>
+                      
+                      {/* Embedded Membership number */}
+                      <div className="font-mono text-center text-[8.5px] sm:text-[10px] md:text-[11px] font-black tracking-widest text-[#f59e0b] bg-black/60 px-1.5 py-0.5 rounded border border-neutral-805 leading-none shadow">
+                        {m.membershipNumber || `ACC-${m.id}`}
+                      </div>
+
+                      {/* Date Joined */}
+                      <div className="text-[5px] sm:text-[5.5px] text-neutral-400 text-right font-mono leading-none">
+                        <span className="block text-amber-500 font-bold text-[4.5px] sm:text-[5px]">MULAI JOIN</span>
+                        {m.yearJoined || "2022"}
                       </div>
                     </div>
                   </div>
@@ -2139,60 +2163,60 @@ export default function Admin() {
                   
                   <div 
                     id="kta-back-card"
-                    className="w-full max-w-[480px] aspect-[1.581/1] rounded-[24px] overflow-hidden relative shadow-2xl border border-zinc-800 text-white select-none shrink-0"
+                    className="w-full max-w-[480px] aspect-[1.586/1] rounded-[24px] overflow-hidden relative shadow-2xl border border-neutral-800 bg-gradient-to-br from-[#0c0c0d] via-[#141416] to-[#070708] text-white select-none shrink-0 flex flex-col justify-between p-4 sm:p-5"
                     style={{ 
-                      background: 'repeating-linear-gradient(45deg, rgba(0,0,0,0.12) 0px, rgba(0,0,0,0.12) 2px, transparent 2px, transparent 6px), linear-gradient(135deg, #191919 0%, #0c0c0c 100%)',
                       fontFamily: '"Inter", sans-serif'
                     }}
                   >
-                    {/* ACC Colors neon accents */}
-                    <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-red-600 via-zinc-800 to-red-600" />
-                    {/* Dark Magnetic Stripe at the top */}
-                    <div className="w-full h-[38px] bg-gradient-to-b from-zinc-950 to-black border-y border-zinc-800/40 absolute top-5 left-0" />
+                    {/* Magnetic Strip Visual mimicking physical layout */}
+                    <div className="absolute left-0 top-3 right-0 h-5 sm:h-6 bg-neutral-950 border-y border-neutral-900 z-0" />
                     
-                    {/* Content Section */}
-                    <div className="absolute top-[72px] left-5 right-5 bottom-4 flex justify-between gap-4">
-                      {/* Left: Standard Guidelines list */}
-                      <div className="flex-1 pr-2 min-w-0 flex flex-col justify-between">
-                        <div>
-                          <h5 className="text-[7.5px] font-black text-amber-500 uppercase tracking-widest border-b border-white/10 pb-0.5 mb-1.5">PERSYARATAN & KETENTUAN ANGGOTA</h5>
-                          <ol className="list-decimal list-inside text-[6px] text-zinc-400 font-semibold space-y-1 leading-snug">
-                            <li>KTA Digital ini sah merupakan tanda identitas resmi pemegang kartu di Auto Claser Club.</li>
-                            <li>Wajib mematuhi seluruh AD/ART klub serta mematuhi etika tertib berlalu lintas di jalan raya.</li>
-                            <li>Kartu ini tidak dapat dialih-tangankan Kepada pihak ketiga.</li>
-                            <li>Penyalahgunaan tanda keanggotaan ini dapat dikenakan sanksi tata tertib organisasi ACC.</li>
-                          </ol>
+                    <div className="h-3.5 sm:h-4.5" />
+
+                    {/* Rules and guidelines list */}
+                    <div className="text-[5px] sm:text-[6px] md:text-[6.5px] text-neutral-300 space-y-0.5 relative z-10 font-sans leading-normal border-b border-neutral-800/60 pb-1 sm:pb-1.5 pr-2">
+                      <p className="font-extrabold text-amber-500 text-[6px] sm:text-[7.5px] mb-0.5 uppercase tracking-wide">
+                        KETENTUAN KTA DIGITAL TERPADU ACC:
+                      </p>
+                      <p>1. Kartu ini merupakan KTA Digital Terpadu resmi Auto Claser Club (ACC).</p>
+                      <p>2. Dilengkapi NFC Smart Chip terintegrasi saldo <span className="text-amber-400 font-bold">e-Toll</span> & Barcode <span className="text-emerald-400 font-bold">Subsidi Pertalite</span>.</p>
+                      <p>3. Melekat secara sah untuk kendaraan terdaftar {m.car || "N/A"} No. Pol {m.licensePlate || "N/A"}.</p>
+                      <p>4. Jaga kerahasiaan data barcode dan dilarang memindahtangankan kuota BBM.</p>
+                      <p>5. Patuhi rambu jalan raya dan junjung penuh slogan Kekeluargaan Tanpa Batas!</p>
+                    </div>
+
+                    {/* Signature, Barcode & Official logo seal */}
+                    <div className="flex justify-between items-center relative z-10 mt-1">
+                      <div className="text-left select-none">
+                        <span className="block text-[4px] sm:text-[4.5px] text-neutral-500 tracking-widest font-mono">CHAIRMAN SIGNATURE</span>
+                        <div className="h-4 sm:h-5 flex items-end">
+                          <span className="font-serif italic text-[9.5px] sm:text-[11px] text-amber-400 font-bold tracking-widest drop-shadow shadow-amber-500/20">
+                            Sukri Lanra
+                          </span>
                         </div>
-                        <p className="text-[5.5px] text-zinc-500 leading-normal font-medium mt-1">Jika menemukan kartu ini silakan kembalikan pada Sekretariat Pusat ACC Nasional.</p>
+                        <span className="block text-[4.5px] sm:text-[5.5px] text-neutral-400 font-bold border-t border-neutral-800 mt-0.5">
+                          OM SUKRI LANRA (KETUM ACC)
+                        </span>
                       </div>
 
-                      {/* Right: Signature stamp & QR Code */}
-                      <div className="w-[110px] shrink-0 flex flex-col items-center justify-between text-center pt-1 border-l border-white/5 pl-3">
-                        {/* Authorized Seal */}
-                        <div className="space-y-0.5 flex flex-col items-center">
-                          <span className="text-[5.5px] text-zinc-500 uppercase font-bold tracking-widest block leading-none">AUTHORIZED BY</span>
-                          {/* Beautiful SVG Signature */}
-                          <div className="h-6 w-14 relative flex items-center justify-center my-0.5">
-                            <svg className="w-full h-full text-blue-400/80 stroke-1" viewBox="0 0 100 40" fill="none" stroke="currentColor">
-                              <path d="M10,20 Q30,5 50,22 T90,15 M30,10 Q50,30 35,35 T65,15" strokeWidth="2.5" />
-                              <circle cx="50" cy="20" r="1.5" fill="currentColor" />
-                            </svg>
+                      {/* Barcode representation for SPBU scans & ACC Seal */}
+                      <div className="flex items-center gap-1 sm:gap-1.5">
+                        <div className="flex flex-col items-center bg-white p-0.5 sm:p-1 rounded border border-neutral-800 shadow shadow-amber-500/10">
+                          <div className="w-[50px] h-[15px] sm:w-[64px] sm:h-[18px] flex gap-[1px] items-stretch justify-center">
+                            {[1,3,2,1,4,1,2,3,1,2,1,3,2,4,1,3].map((w, idx) => (
+                              <div key={idx} className="bg-black" style={{ width: `${w * 0.7}px` }} />
+                            ))}
                           </div>
-                          <span className="text-[7.5px] font-black text-zinc-300 tracking-wide block leading-none">KORWIL UTAMA</span>
+                          <span className="block text-[4px] sm:text-[4.5px] font-mono font-bold text-neutral-900 mt-0.5 tracking-tighter">
+                            ACC-{m.membershipNumber || `KTA-${m.id}`}
+                          </span>
                         </div>
-
-                        {/* Miniature Authentication QR Code */}
-                        <div className="bg-white p-[3px] rounded-lg shadow-lg shrink-0 w-[50px] h-[50px] flex items-center justify-center border border-zinc-300">
-                          <svg className="w-full h-full text-black" viewBox="0 0 100 100" fill="currentColor">
-                            <path d="M0,0 h30 v30 h-30 z M10,10 h10 v10 h-10 z" />
-                            <path d="M70,0 h30 v30 h-30 z M80,10 h10 v10 h-10 z" />
-                            <path d="M0,70 h30 v30 h-30 z M10,80 h10 v10 h-10 z" />
-                            <path d="M40,0 h10 v10 h-10 z M55,10 h10 v10 h-10 z" />
-                            <path d="M40,35 h20 v10 h-20 z M35,55 h10 v20 h-10 z M55,55 h20 v10 h-20 z" />
-                            <path d="M70,40 h10 v20 h-10 z M85,75 h15 v25 h-15 z M45,85 h20 v15 h-20 z" />
-                            <circle cx="50" cy="50" r="5.5" className="text-red-600" />
-                          </svg>
-                        </div>
+                        
+                        <img 
+                          src="/logo.jpg" 
+                          alt="ACC Logo Back" 
+                          className="w-5 h-5 sm:w-7 sm:h-7 rounded-sm border border-amber-500/40 bg-white p-0.5 object-contain shadow-md" 
+                        />
                       </div>
                     </div>
                   </div>

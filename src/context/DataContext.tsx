@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { BlogPost, Activity, Chapter, HeroData, AboutData, JoinData, Registration, AnnouncementData, CommitteeMember, MemberProfile, CalendarEvent } from '../types';
 import { db, auth } from '../firebase';
-import { BLOG_POSTS, COMMITTEE_MEMBERS } from '../data';
+import { BLOG_POSTS, COMMITTEE_MEMBERS, MEMBER_PROFILES } from '../data';
 import { 
   collection, query, onSnapshot, doc, setDoc, updateDoc, deleteDoc, 
   getDocFromServer, addDoc
@@ -346,7 +346,26 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const deleteMemberProfile = async (id: string) => {
-    try { await deleteDoc(doc(db, 'memberProfiles', id)); }
+    const idStr = String(id);
+    
+    // Optimistic UI state update to reflect the deletion immediately
+    setMemberProfiles(prev => {
+      const exists = prev.some(m => m.id === idStr);
+      if (exists) {
+        return prev.map(m => m.id === idStr ? { ...m, isDeleted: true } : m);
+      } else {
+        return [...prev, { id: idStr, isDeleted: true } as MemberProfile];
+      }
+    });
+
+    try {
+      const isStatic = MEMBER_PROFILES.some(m => m.id === idStr);
+      if (isStatic) {
+        await setDoc(doc(db, 'memberProfiles', idStr), { isDeleted: true }, { merge: true });
+      } else {
+        await deleteDoc(doc(db, 'memberProfiles', idStr));
+      }
+    }
     catch (err) { handleFirestoreError(err, OperationType.DELETE, `memberProfiles/${id}`); }
   };
 

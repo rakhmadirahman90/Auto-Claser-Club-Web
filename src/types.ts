@@ -8,6 +8,7 @@ export interface MemberProfile {
   yearJoined: string;
   membershipNumber: string;
   phone?: string;
+  isDeleted?: boolean;
 }
 
 export interface BlogPost {

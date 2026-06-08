@@ -114,15 +114,16 @@ export default function MemberProfile() {
   };
 
   const mergedProfiles = useMemo(() => {
-    const list = [...MEMBER_PROFILES];
-    if (memberProfiles && memberProfiles.length > 0) {
-      memberProfiles.forEach(newMember => {
-        if (!list.some(existing => existing.id === newMember.id || existing.membershipNumber === newMember.membershipNumber)) {
-          list.push(newMember);
-        }
-      });
-    }
-    return list;
+    const staticList = MEMBER_PROFILES.map(staticMember => {
+      const override = memberProfiles?.find(f => f.id === staticMember.id);
+      return override ? { ...staticMember, ...override } : staticMember;
+    });
+
+    const customList = (memberProfiles || []).filter(firestoreMember => {
+      return !MEMBER_PROFILES.some(staticMember => staticMember.id === firestoreMember.id);
+    });
+
+    return [...staticList, ...customList].filter(m => !m.isDeleted);
   }, [memberProfiles]);
 
   const filteredProfiles = useMemo(() => {

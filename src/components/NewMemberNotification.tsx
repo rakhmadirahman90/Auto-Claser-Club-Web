@@ -12,7 +12,16 @@ export default function NewMemberNotification() {
 
   // Combine static and dynamic profiles
   const allProfiles = React.useMemo(() => {
-    const list = [...MEMBER_PROFILES.filter(s => !memberProfiles?.find(f => f.id === s.id)), ...(memberProfiles || [])];
+    const staticList = MEMBER_PROFILES.map(staticMember => {
+      const override = memberProfiles?.find(f => f.id === staticMember.id);
+      return override ? { ...staticMember, ...override } : staticMember;
+    });
+
+    const customList = (memberProfiles || []).filter(firestoreMember => {
+      return !MEMBER_PROFILES.some(staticMember => staticMember.id === firestoreMember.id);
+    });
+
+    const list = [...staticList, ...customList].filter(m => !m.isDeleted);
     
     // Sort so newly added database profiles (longer/timestamp IDs) come first.
     // If none exist, we show the ones with higher IDs or just the latest added profiles.
