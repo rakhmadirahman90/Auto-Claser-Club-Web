@@ -1895,6 +1895,70 @@ export default function Admin() {
               useCORS: true,
               allowTaint: true,
               backgroundColor: null,
+              onclone: (clonedDoc) => {
+                // Helper function to resolve any CSS color format to standard browser-parseable rgba
+                const convertCssColorToRgb = (colorStr: string) => {
+                  if (!colorStr) return colorStr;
+                  if (!colorStr.includes('oklch') && !colorStr.includes('oklab') && !colorStr.includes('light-dark')) {
+                    return colorStr;
+                  }
+                  try {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = 1;
+                    canvas.height = 1;
+                    const ctx = canvas.getContext('2d');
+                    if (!ctx) return 'rgb(0, 0, 0)';
+                    ctx.fillStyle = colorStr;
+                    ctx.fillRect(0, 0, 1, 1);
+                    const [r, g, b, a] = ctx.getImageData(0, 0, 1, 1).data;
+                    return `rgba(${r}, ${g}, ${b}, ${a / 255})`;
+                  } catch (e) {
+                    return 'rgb(0, 0, 0)';
+                  }
+                };
+
+                // 1. Core visual sanitization: Clean up styles in any <style> sheet injected in the DOM (like Tailwind V4 variables)
+                Array.from(clonedDoc.querySelectorAll('style')).forEach((styleEl) => {
+                  let cssText = styleEl.textContent || '';
+                  if (cssText.includes('oklch') || cssText.includes('oklab') || cssText.includes('light-dark')) {
+                    cssText = cssText.replace(/(oklch|oklab)\([^)]+\)/g, (match) => {
+                      return convertCssColorToRgb(match);
+                    });
+                    cssText = cssText.replace(/light-dark\(([^,]+),[^)]+\)/g, '$1');
+                    styleEl.textContent = cssText;
+                  }
+                });
+
+                // 2. Wrap getComputedStyle with a Proxy during parsing so html2canvas intercepts compatible RGB strings for element declarations
+                const win = clonedDoc.defaultView || window;
+                const originalGetComputedStyle = win.getComputedStyle;
+                win.getComputedStyle = function (el: Element, pseudo?: string) {
+                  const style = originalGetComputedStyle.call(win, el, pseudo);
+                  return new Proxy(style, {
+                    get(target: any, prop: string | symbol) {
+                      const val = target[prop];
+                      if (typeof prop === 'string') {
+                        if (typeof val === 'string' && (val.includes('oklch') || val.includes('oklab') || val.includes('light-dark'))) {
+                          return convertCssColorToRgb(val);
+                        }
+                        if (typeof val === 'function') {
+                          if (prop === 'getPropertyValue') {
+                            return function(key: string) {
+                              const rawVal = target.getPropertyValue(key);
+                              if (rawVal && (rawVal.includes('oklch') || rawVal.includes('oklab') || rawVal.includes('light-dark'))) {
+                                return convertCssColorToRgb(rawVal);
+                              }
+                              return rawVal;
+                            };
+                          }
+                          return val.bind(target);
+                        }
+                      }
+                      return val;
+                    }
+                  }) as any;
+                };
+              }
             });
             
             const imgData = canvas.toDataURL('image/png');
