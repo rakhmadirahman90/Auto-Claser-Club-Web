@@ -5,7 +5,14 @@ service cloud.firestore {
     
     function isSignedIn() { return request.auth != null && request.auth.token.email_verified == true; }
     function isAdmin() { 
-      return true; 
+      return request.auth != null && (
+        (request.auth.token != null && request.auth.token.email_verified == true && (
+          request.auth.token.email == "rakhmadi.rahman90@gmail.com" ||
+          request.auth.token.email == "admin@autoclaserclub.com" ||
+          request.auth.token.email == "autoclaserclub@gmail.com"
+        )) ||
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+      );
     }
     function isValidId(id) { return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_-]+$'); }
     function incoming() { return request.resource.data; }
@@ -103,7 +110,8 @@ service cloud.firestore {
     }
 
     match /admins/{adminId} {
-      allow read, write: if true;
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.uid == adminId;
     }
     
     function isValidHero(data) {

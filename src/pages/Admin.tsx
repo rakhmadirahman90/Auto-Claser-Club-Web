@@ -103,7 +103,8 @@ export default function Admin() {
     }
   }, [editingId]);
 
-  const hasAccess = user || isAdminSession;
+  const isAllowedGoogleAdmin = user && (user.email === "rakhmadi.rahman90@gmail.com" || user.email === "admin@autoclaserclub.com" || user.email === "autoclaserclub@gmail.com");
+  const hasAccess = isAdminSession || !!isAllowedGoogleAdmin;
 
   if (!hasAccess) {
     return (
@@ -192,9 +193,12 @@ export default function Admin() {
 
               const authToastId = toast.loading('Memproses otentikasi WhatsApp...');
               try {
-                // Write document to verify credentials dynamically using cleaned phone number as ID
+                const { signInAnonymously } = await import('firebase/auth');
+                const userCredential = await signInAnonymously(auth);
+                const uid = userCredential.user.uid;
+                
                 const { doc, setDoc } = await import('firebase/firestore');
-                await setDoc(doc(db, 'admins', cleanedInput), {
+                await setDoc(doc(db, 'admins', uid), {
                   whatsapp: cleanedInput,
                   role: 'admin',
                   createdAt: new Date().toISOString()
@@ -216,10 +220,33 @@ export default function Admin() {
                 toast.success('Masuk berhasil!', { id: authToastId });
               }
             }}
-            className="w-full flex items-center justify-center gap-3 bg-emerald-600 text-white font-extrabold py-3 px-4 rounded-xl hover:bg-emerald-500 transition-all shadow-lg cursor-pointer text-sm mb-4"
+            className="w-full flex items-center justify-center gap-3 bg-emerald-600 text-white font-extrabold py-3 px-4 rounded-xl hover:bg-emerald-500 transition-all shadow-lg cursor-pointer text-sm mb-3"
           >
             <User size={18} />
             Masuk via WhatsApp
+          </button>
+
+          <button 
+            type="button"
+            onClick={async () => {
+              const loginToastId = toast.loading('Menghubungkan ke Google...');
+              try {
+                const { loginWithGoogle } = await import('../firebase');
+                await loginWithGoogle();
+                toast.success('Masuk berhasil dengan Google!', { id: loginToastId });
+              } catch (err: any) {
+                toast.error('Gagal masuk dengan Google: ' + err.message, { id: loginToastId });
+              }
+            }}
+            className="w-full flex items-center justify-center gap-3 bg-white hover:bg-gray-50 text-gray-800 border border-theme-border font-bold py-3 px-4 rounded-xl transition-all shadow-md cursor-pointer text-sm mb-4"
+          >
+            <svg className="w-5 h-5 flex-shrink-0" viewBox="0 0 24 24">
+              <path fill="#EA4335" d="M12 5.04c1.66 0 3.2.57 4.38 1.69l3.27-3.27C17.68 1.54 14.98 1 12 1 7.35 1 3.37 3.67 1.39 7.56l3.85 2.99C6.16 7.02 8.87 5.04 12 5.04z" />
+              <path fill="#4285F4" d="M23.49 12.27c0-.81-.07-1.59-.2-2.36H12v4.51h6.46c-.29 1.48-1.14 2.73-2.4 3.58l3.73 2.89c2.18-2.01 3.7-4.99 3.7-8.62z" />
+              <path fill="#FBBC05" d="M5.24 14.55c-.24-.72-.38-1.5-.38-2.3s.14-1.58.38-2.3L1.39 6.96C.5 8.74 0 10.74 0 12.8s.5 4.06 1.39 5.84l3.85-2.99-1-.1z" />
+              <path fill="#34A853" d="M12 23c3.24 0 5.97-1.07 7.96-2.91l-3.73-2.89c-1.1.74-2.52 1.18-4.23 1.18-3.13 0-5.84-1.98-6.76-4.95l-3.85 2.99C3.37 20.33 7.35 23 12 23z" />
+            </svg>
+            Masuk dengan Google
           </button>
           
           <div className="mt-8 pt-6 border-t border-theme-border/50">
